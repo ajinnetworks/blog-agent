@@ -22,7 +22,12 @@
               aria-label="검색"
               onclick="
                 var el = document.getElementById('search-input');
-                if (el) { el.focus(); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+                if (el) {
+                  el.focus();
+                  el.scrollIntoView({behavior:'smooth', block:'center'});
+                } else {
+                  window.location = '{{ "/" | relative_url }}';
+                }
               ">🔍</button>
       <button class="nav-hamburger" aria-label="메뉴" onclick="toggleMobileMenu()">☰</button>
     </div>
