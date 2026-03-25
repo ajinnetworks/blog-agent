@@ -64,7 +64,7 @@ layout: default
     <div class="share-section">
       <h4>이 글이 도움이 되셨나요? 공유해주세요</h4>
       <div>
-        <button onclick="shareKakao()" class="share-btn share-kakao">💛 카카오톡</button>
+        <a href="https://sharer.kakao.com/talk/friends/picker/link?app_key=f49db6cf9929746a86ba847b21167032&url={{ page.url | absolute_url | uri_escape }}&text={{ page.title | uri_escape }}" target="_blank" class="share-btn share-kakao">💛 카카오톡</a>
 <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ page.url | absolute_url | uri_escape }}&title={{ page.title | uri_escape }}"
            target="_blank" rel="noopener" class="share-btn share-linkedin">💼 LinkedIn</a>
         <button onclick="copyURL()" class="share-btn share-copy">🔗 URL 복사</button>
