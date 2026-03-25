@@ -1,0 +1,28 @@
+<header class="site-header">
+  <div class="wrapper">
+    <!-- 좌측: 로고 -->
+    <a href="{{ '/' | relative_url }}" class="nav-logo">
+      <img src="{{ '/assets/images/ajin_logo.png' | relative_url }}"
+           alt="아진네트웍스"
+           onerror="this.style.display='none'">
+      <span class="nav-logo-text">AJIN NETWORKS</span>
+    </a>
+
+    <!-- 중앙: 네비게이션 -->
+    <nav class="nav-links">
+      <a href="{{ '/' | relative_url }}">홈</a>
+      <a href="{{ '/' | relative_url }}#categories" onclick="document.querySelector('.unified-filter-bar')?.scrollIntoView({behavior:'smooth'}); return false;">카테고리</a>
+      <a href="https://www.ajinnetworks.co.kr" target="_blank" rel="noopener">회사홈페이지</a>
+    </nav>
+
+    <!-- 우측: 검색 아이콘 -->
+    <button class="nav-search-btn"
+            aria-label="검색"
+            onclick="
+              var el = document.getElementById('search-input');
+              if (el) { el.focus(); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+            ">
+      🔍
+    </button>
+  </div>
+</header>

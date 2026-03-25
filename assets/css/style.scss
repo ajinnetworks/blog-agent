@@ -33,12 +33,14 @@ body {
 
 /* ── 헤더 ── */
 .site-header {
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: #0a0e1a;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow);
+  z-index: 200;
+  height: 64px;
+  display: flex;
+  align-items: center;
 }
 .site-header .wrapper {
   max-width: var(--max-width);
@@ -47,27 +49,55 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  width: 100%;
 }
-.site-title {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  color: var(--heading) !important;
-  text-decoration: none !important;
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.nav-logo img { height: 36px; }
+.nav-logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
   letter-spacing: -0.3px;
 }
-.site-nav .page-link {
+.nav-links {
+  display: flex;
+  gap: 4px;
+}
+.nav-links a {
+  color: rgba(255,255,255,0.75);
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-muted) !important;
-  text-decoration: none;
   padding: 6px 14px;
   border-radius: 20px;
+  text-decoration: none;
   transition: all 0.2s;
 }
-.site-nav .page-link:hover {
-  color: var(--primary) !important;
-  background: rgba(26,115,232,0.08);
+.nav-links a:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+.nav-search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.75);
+  font-size: 18px;
+  padding: 6px 10px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.nav-search-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+@media (max-width: 640px) {
+  .nav-links { display: none; }
 }
 
 /* ── 메인 래퍼 ── */
