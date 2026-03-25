@@ -87,8 +87,8 @@ function applyFilters() {
   document.querySelectorAll('.post-card').forEach(function(card) {
     var title = (card.dataset.postTitle || '').toLowerCase();
     var desc = (card.dataset.postDesc || '').toLowerCase();
-    var cats = (card.dataset.cats || '').split(',').map(function(c){ return c.trim(); });
-    var matchCat = currentCat === 'all' || cats.includes(currentCat);
+    var cats = (card.dataset.cats || '').split(',').map(function(c){ return c.trim().toLowerCase(); });
+    var matchCat = currentCat === 'all' || cats.includes(currentCat.toLowerCase());
     var matchSearch = !q || title.includes(q) || desc.includes(q);
     card.style.display = (matchCat && matchSearch) ? '' : 'none';
   });
