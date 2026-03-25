@@ -734,6 +734,22 @@ kbd {
 <meta property="og:type" content="{% if page.date %}article{% else %}website{% endif %}">
 <meta property="og:url" content="{{ page.url | prepend: site.url }}">
 <meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:image" content="https://ajinnetworks.github.io/assets/images/ajin_logo.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "아진네트웍스 주식회사",
+  "url": "https://www.ajinnetworks.co.kr",
+  "logo": "https://ajinnetworks.github.io/assets/images/ajin_logo.png",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "010-4168-0472",
+    "contactType": "customer service"
+  }
+}
+</script>
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
 <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% elsif site.description %}{{ site.description }}{% endif %}">

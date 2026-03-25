@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   </head>
   <body>
+    <!-- 읽기 진행 바 -->
+    <div id="reading-progress"></div>
+    <!-- 상단으로 버튼 -->
+    <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">↑</button>
     {%- include header.html -%}
     <main class="page-content" aria-label="Content">
       <div class="wrapper">

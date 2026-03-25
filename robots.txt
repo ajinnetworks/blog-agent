@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Sitemap: https://ajinnetworks.github.io/sitemap.xml
+Disallow: /assets/
+Disallow: /category/

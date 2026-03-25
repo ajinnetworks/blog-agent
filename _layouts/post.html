@@ -30,6 +30,13 @@ layout: default
 
   <!-- 포스트 본문 -->
   <div class="post-body-wrap">
+
+    <!-- 목차 -->
+    <div class="toc-box">
+      <h4>📋 목차</h4>
+      <ul class="toc-list"></ul>
+    </div>
+
     <div class="post-body">
       {{ content }}
     </div>
@@ -52,6 +59,42 @@ layout: default
         <a href="https://www.ajinnetworks.co.kr" target="_blank" class="cta-btn">회사 홈페이지 방문 →</a>
       </div>
     </div>
+
+    <!-- 공유 버튼 -->
+    <div class="share-section">
+      <h4>이 글이 도움이 되셨나요? 공유해주세요</h4>
+      <div>
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ page.url | absolute_url | uri_escape }}&title={{ page.title | uri_escape }}"
+           target="_blank" rel="noopener" class="share-btn share-linkedin">💼 LinkedIn</a>
+        <button onclick="copyURL()" class="share-btn share-copy">🔗 URL 복사</button>
+      </div>
+    </div>
+
+    <!-- 관련 포스트 -->
+    {% assign all_related = site.posts | where_exp: "p", "p.url != page.url" %}
+    {% assign cat_related = "" | split: "" %}
+    {% for p in all_related %}
+      {% for cat in p.categories %}
+        {% if page.categories contains cat %}
+          {% assign cat_related = cat_related | push: p %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {% if cat_related.size > 0 %}
+    <div class="related-posts">
+      <h4>📌 관련 포스트</h4>
+      <div class="related-grid">
+        {% for p in cat_related limit: 3 %}
+        <a href="{{ p.url | relative_url }}" class="related-item">
+          {% if p.categories %}<div class="related-item-cat">{{ p.categories | first }}</div>{% endif %}
+          <div class="related-item-title">{{ p.title }}</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px;">{{ p.date | date: "%Y.%m.%d" }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- 목록으로 돌아가기 -->
     <div class="post-nav">
