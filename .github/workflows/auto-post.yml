@@ -37,8 +37,7 @@ jobs:
       - name: 의존성 설치
         run: |
           pip install \
-            anthropic \
-            PyGithub \
+            google-generativeai==0.8.0 \n            PyGithub \
             python-frontmatter \
             requests \
             pyyaml \
