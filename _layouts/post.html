@@ -142,4 +142,39 @@ layout: default
   };
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var postBody = document.querySelector('.post-body');
+  var tocList = document.querySelector('.toc-list');
+  if (!postBody || !tocList) return;
+
+  var headings = postBody.querySelectorAll('h2, h3');
+  if (headings.length === 0) {
+    var tocBox = document.querySelector('.toc-box');
+    if (tocBox) tocBox.style.display = 'none';
+    return;
+  }
+
+  headings.forEach(function(h, i) {
+    if (!h.id) {
+      var slug = h.textContent.trim()
+        .replace(/\s+/g, '-')
+        .replace(/[<>"&]/g, '');
+      h.id = slug || ('heading-' + i);
+    }
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent.trim();
+    if (h.tagName === 'H3') {
+      li.style.paddingLeft = '1em';
+      li.style.fontSize = '0.9em';
+      li.style.color = '#6b7280';
+    }
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+});
+</script>
 </article>
