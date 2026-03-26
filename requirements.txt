@@ -1,7 +1,10 @@
 # blog_agent 의존 패키지 (2026-03-26 기준)
 
-# Anthropic Claude API
+# Anthropic Claude API (미사용, 보존)
 anthropic>=0.86.0
+
+# Google Gemini API (신규 SDK)
+google-genai>=1.68.0
 
 # GitHub API
 PyGithub>=2.8.1
