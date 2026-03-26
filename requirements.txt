@@ -1,0 +1,29 @@
+# blog_agent 의존 패키지 (2026-03-26 기준)
+
+# Anthropic Claude API
+anthropic>=0.86.0
+
+# GitHub API
+PyGithub>=2.8.1
+
+# 환경변수 로드
+python-dotenv>=1.2.2
+
+# Markdown front matter 파싱
+python-frontmatter>=1.1.0
+
+# 이미지 처리
+Pillow>=12.1.0
+
+# HTTP 요청
+requests>=2.32.0
+
+# YAML 파싱
+PyYAML>=6.0
+
+# 스케줄러
+schedule>=1.2.0
+
+# 테스트
+pytest>=9.0.0
+pytest-mock>=3.12.0
