@@ -1,0 +1,51 @@
+# ================================
+# Blog Auto-Agent 전역 설정
+# ================================
+
+agent:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 4000
+  temperature: 0.7
+
+blog:
+  platform: "tistory"          # tistory | wordpress | naver
+  posts_per_week: 3
+  schedule_days: ["tuesday", "thursday", "saturday"]
+  schedule_time: "09:00"
+  default_category: "기술/자동화"
+  language: "ko"
+
+trend:
+  sources:
+    - "google_trends"          # Google 트렌드 RSS
+    - "naver_datalab"          # 네이버 데이터랩 (추측입니다 - API 확인 필요)
+    - "reddit_korea"           # Reddit 한국 커뮤니티
+  keywords_per_run: 10         # 후보 키워드 수집 수
+  top_select: 3                # 최종 선정 키워드 수
+
+writer:
+  min_words: 800
+  max_words: 1500
+  sections:
+    - "도입부 (훅)"
+    - "본론 1 — 배경/개념"
+    - "본론 2 — 핵심 내용"
+    - "본론 3 — 실용 팁/사례"
+    - "결론 + CTA"
+  seo:
+    target_keyword_density: 1.5   # % (추측입니다)
+    meta_description_length: 150  # 글자 수
+
+reviewer:
+  min_score: 75                # 100점 기준, 미달 시 재작성 요청
+  checks:
+    - "seo_keyword"
+    - "readability"
+    - "structure"
+    - "factual_tone"
+
+output:
+  draft_dir: "output/drafts"
+  published_dir: "output/published"
+  log_dir: "output/logs"
+  format: "markdown"
