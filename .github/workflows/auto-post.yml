@@ -36,12 +36,13 @@ jobs:
 
       - name: 의존성 설치
         run: |
-          pip install \
-            google-generativeai==0.8.0 \n            PyGithub \
-            python-frontmatter \
-            requests \
-            pyyaml \
-            python-dotenv \
+          pip install 
+            google-generativeai>=0.3.0 
+            PyGithub 
+            python-frontmatter 
+            requests 
+            pyyaml 
+            python-dotenv 
             schedule
 
       - name: .env 파일 생성
