@@ -2,8 +2,8 @@
 # 아진네트웍스 주식회사 — 기술 블로그 Jekyll 설정
 # ================================================================
 
-title: "아진네트웍스(주) 기술 블로그"
-description: "공장 물류 자동화 · 딥러닝 비전 · 스마트팩토리 기술 인사이트"
+title: "아진네트웍스 (주) 자동화 기술 블로그"
+description: "아진네트웍스(주)의 공장자동화·딥러닝 비전·스마트팩토리 공식 기술 블로그"
 url: "https://ajinnetworks.github.io"
 baseurl: ""
 company_url: "https://www.ajinnetworks.co.kr"
