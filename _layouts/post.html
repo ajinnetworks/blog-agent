@@ -124,7 +124,7 @@ layout: default
       objectType: "feed",
       content: {
         title: document.title,
-        description: (document.querySelector("meta[name=description]") || {}).content || "아진네트웍스 기술 블로그",
+        description: (document.querySelector("meta[name=description]") || {}).content || "{{ site.description }}",
         imageUrl: "https://ajinnetworks.github.io/assets/images/ajin_logo.png",
         link: {
           mobileWebUrl: window.location.href,
