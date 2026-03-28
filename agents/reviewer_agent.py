@@ -7,6 +7,8 @@ Evaluator AI 역할: 오류·누락·요구사항 미반영 점검
 import json
 import logging
 import os
+import time
+from functools import wraps
 from pathlib import Path
 
 import google.generativeai as genai
@@ -25,6 +27,40 @@ if sys.stderr.encoding != 'utf-8':
 
 
 logger = logging.getLogger(__name__)
+
+def retry_on_rate_limit(max_retries: int = 3, wait_seconds: int = 60):
+    """429/quota 오류 시 지수 대기 후 재시도 데코레이터."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    is_rate_limit = (
+                        "429" in str(e)
+                        or "quota" in str(e).lower()
+                        or "ResourceExhausted" in type(e).__name__
+                    )
+                    if is_rate_limit:
+                        if attempt < max_retries - 1:
+                            wait = wait_seconds * (attempt + 1)
+                            print(f"[RATE LIMIT] {wait}초 대기 후 재시도 ({attempt + 1}/{max_retries})")
+                            time.sleep(wait)
+                        else:
+                            print("[RATE LIMIT] 재시도 한도 초과 — 건너뜀")
+                            return {
+                                "pass": False,
+                                "total_score": 0,
+                                "breakdown": {},
+                                "issues": [],
+                                "revision_notes": "API 한도 초과로 검수 불가",
+                            }
+                    else:
+                        raise
+        return wrapper
+    return decorator
+
 
 # 모델 우선순위 (한도 초과 시 자동 전환)
 GEMINI_MODELS = [
@@ -63,6 +99,7 @@ def load_reviewer_prompt() -> str:
         return f.read()
 
 
+@retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def review_post(post: dict) -> dict:
     """
     단일 포스트 검수.
