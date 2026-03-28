@@ -735,7 +735,11 @@ kbd {
 <meta property="og:type" content="{% if page.date %}article{% else %}website{% endif %}">
 <meta property="og:url" content="{{ page.url | prepend: site.url }}">
 <meta property="og:site_name" content="{{ site.title }}">
-<meta property="og:image" content="https://ajinnetworks.github.io/assets/images/ajin_logo.png">
+{% if page.image %}
+  <meta property="og:image" content="{{ page.image | absolute_url }}">
+{% else %}
+  <meta property="og:image" content="{{ '/assets/img/og-default.png' | absolute_url }}">
+{% endif %}
 
 <script type="application/ld+json">
 {
