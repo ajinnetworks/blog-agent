@@ -15,32 +15,66 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-# 허용 카테고리 (우선순위 순)
-ALLOWED_CATEGORIES = [
-    "물류자동화",
-    "공장자동화",
-    "딥러닝비전",
-    "스마트팩토리",
-    "제어SW",
+BLOG_CATEGORIES = [
+    {
+        "name": "포장자동화",
+        "keywords": ["박스 포장", "테이핑", "라벨링", "팔레타이징", "슈링크 포장", "진공포장"]
+    },
+    {
+        "name": "자동차자동화",
+        "keywords": ["차체 용접", "도장 자동화", "EV 배터리 조립", "타이어 조립", "의장라인"]
+    },
+    {
+        "name": "반도체자동화",
+        "keywords": ["웨이퍼 핸들링", "클린룸 자동화", "AOI 검사", "다이 본딩", "와이어 본딩"]
+    },
+    {
+        "name": "디스플레이자동화",
+        "keywords": ["OLED 검사", "LCD 패널", "본딩 자동화", "편광필름", "FOG 공정"]
+    },
+    {
+        "name": "물류자동화",
+        "keywords": ["AGV", "AMR", "소터", "컨베이어", "WMS", "자동창고", "피킹시스템"]
+    },
+    {
+        "name": "로봇자동화",
+        "keywords": ["협동로봇", "산업용 로봇", "델타로봇", "SCARA", "로봇 그리퍼", "로봇 비전"]
+    },
+    {
+        "name": "부품정보",
+        "keywords": ["서보모터", "리니어가이드", "센서", "액추에이터", "그리퍼", "볼스크류"]
+    },
+    {
+        "name": "PLC제어",
+        "keywords": ["Siemens PLC", "Mitsubishi PLC", "LS PLC", "HMI", "SCADA", "필드버스"]
+    },
+    {
+        "name": "비전검사",
+        "keywords": ["딥러닝 비전", "패턴매칭", "결함검출", "3D비전", "머신비전", "OCR검사"]
+    },
+    {
+        "name": "스마트팩토리",
+        "keywords": ["MES", "엣지AI", "디지털트윈", "OEE", "예지보전", "스마트센서"]
+    }
 ]
 
-# 카테고리 분류 키워드 매핑
-CATEGORY_KEYWORDS = {
-    "물류자동화": ["물류", "AGV", "AMR", "WMS", "창고", "배송", "SCM", "재고"],
-    "공장자동화": ["공장", "CNC", "로봇", "가공", "조립", "용접", "생산라인", "자동화"],
-    "딥러닝비전": ["딥러닝", "비전", "AI", "머신러닝", "불량검사", "영상처리", "카메라"],
-    "스마트팩토리": ["스마트팩토리", "MES", "ERP", "IoT", "디지털전환", "데이터"],
-    "제어SW": ["PLC", "제어", "SCADA", "HMI", "프로그램", "소프트웨어", "알고리즘"],
-}
+# 완전 제외 키워드
+EXCLUDE_KEYWORDS = [
+    "금융", "카드결제", "핀테크", "은행", "주식", "암호화폐",
+    "보험", "대출", "신용카드", "페이먼트"
+]
+
+ALLOWED_CATEGORIES = [cat["name"] for cat in BLOG_CATEGORIES]
+CATEGORY_KEYWORDS = {cat["name"]: cat["keywords"] for cat in BLOG_CATEGORIES}
 
 
 def classify_category(keyword: str, angle: str) -> str:
     text = f"{keyword} {angle}".lower()
-    for cat, keywords in CATEGORY_KEYWORDS.items():
-        for kw in keywords:
+    for cat in BLOG_CATEGORIES:
+        for kw in cat["keywords"]:
             if kw.lower() in text:
-                return cat
-    return "공장자동화"
+                return cat["name"]
+    return "스마트팩토리"
 
 
 def validate_category(category: str) -> str:
@@ -49,7 +83,14 @@ def validate_category(category: str) -> str:
     for allowed in ALLOWED_CATEGORIES:
         if allowed in category or category in allowed:
             return allowed
-    return "공장자동화"
+    return "스마트팩토리"
+
+
+def is_valid_topic(topic: str) -> bool:
+    for kw in EXCLUDE_KEYWORDS:
+        if kw in topic:
+            return False
+    return True
 
 
 def load_config() -> dict:
@@ -190,6 +231,9 @@ def run_writer_agent(topics: list[dict]) -> list[dict]:
     posts = []
 
     for i, topic in enumerate(topics, 1):
+        if not is_valid_topic(topic.get("keyword", "")):
+            logger.warning(f"[{i}/{len(topics)}] 제외 키워드 포함 — 스킵: {topic['keyword']}")
+            continue
         logger.info(f"[{i}/{len(topics)}] 작성 중: {topic['keyword']}")
         try:
             post = generate_post(topic)

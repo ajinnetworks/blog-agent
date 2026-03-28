@@ -13,6 +13,8 @@ import google.generativeai as genai
 import requests
 import yaml
 
+from agents.writer_agent import is_valid_topic, EXCLUDE_KEYWORDS
+
 logger = logging.getLogger(__name__)
 
 
@@ -168,13 +170,21 @@ def run_trend_agent(blog_domain: Optional[str] = None) -> list[dict]:
             {"keyword": "딥러닝 실무 적용 사례", "source": "fallback"},
         ]
 
-    logger.info(f"총 {len(all_trends)}개 트렌드 키워드 수집됨")
+    # EXCLUDE_KEYWORDS 필터링 (Gemini 전달 전 원천 차단)
+    filtered_trends = [t for t in all_trends if is_valid_topic(t["keyword"])]
+    excluded_count = len(all_trends) - len(filtered_trends)
+    if excluded_count:
+        logger.info(f"제외 키워드 필터: {excluded_count}개 키워드 제거됨")
+    logger.info(f"총 {len(filtered_trends)}개 트렌드 키워드 Gemini 전달")
 
     selected = select_topics_via_gemini(
-        raw_trends=all_trends,
+        raw_trends=filtered_trends,
         blog_domain=domain,
         top_n=config["trend"]["top_select"],
     )
+
+    # Gemini 결과도 이중 필터링
+    selected = [t for t in selected if is_valid_topic(t["keyword"])]
 
     # 로그 저장
     log_path = os.path.join(
@@ -186,6 +196,7 @@ def run_trend_agent(blog_domain: Optional[str] = None) -> list[dict]:
         json.dump({
             "timestamp": datetime.now().isoformat(),
             "raw_count": len(all_trends),
+            "filtered_count": len(filtered_trends),
             "selected": selected
         }, f, ensure_ascii=False, indent=2)
 
