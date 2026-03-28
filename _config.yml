@@ -77,12 +77,5 @@ exclude:
 feed:
   posts_limit: 20
   
-# ── HTML 압축 ────────────────────────────────
-compress_html:
-  clippings: all
-  comments: all
-  endings: all
-  blanklines: false
-
 # ── Google Analytics ─────────────────────────
 google_analytics: G-RYPE4V64TJ

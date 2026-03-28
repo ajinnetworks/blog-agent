@@ -104,43 +104,39 @@ layout: default
   </div>
 
 
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+        integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
+        crossorigin="anonymous"
+        onload="initKakao()"></script>
 <script>
-(function() {
-  function initKakao() {
-    if (window.Kakao && !Kakao.isInitialized()) {
-      Kakao.init("f49db6cf9929746a86ba847b21167032");
-    }
+function initKakao() {
+  if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+    Kakao.init('f49db6cf9929746a86ba847b21167032');
   }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initKakao);
-  } else {
-    initKakao();
-  }
-  window.shareKakao = function() {
-    if (!window.Kakao) { alert("카카오 SDK 로드 실패"); return; }
-    if (!Kakao.isInitialized()) { Kakao.init("f49db6cf9929746a86ba847b21167032"); }
-    Kakao.Share.sendDefault({
-      objectType: "feed",
-      content: {
-        title: document.title,
-        description: (document.querySelector("meta[name=description]") || {}).content || "{{ site.description }}",
-        imageUrl: "https://ajinnetworks.github.io/assets/images/ajin_logo.png",
-        link: {
-          mobileWebUrl: window.location.href,
-          webUrl: window.location.href
-        }
-      },
-      buttons: [{
-        title: "포스트 보기",
-        link: {
-          mobileWebUrl: window.location.href,
-          webUrl: window.location.href
-        }
-      }]
-    });
-  };
-})();
+}
+window.shareKakao = function() {
+  if (typeof Kakao === 'undefined') { alert("카카오 SDK 로드 실패"); return; }
+  if (!Kakao.isInitialized()) { initKakao(); }
+  Kakao.Share.sendDefault({
+    objectType: "feed",
+    content: {
+      title: document.title,
+      description: (document.querySelector("meta[name=description]") || {}).content || "{{ site.description }}",
+      imageUrl: '{% if page.image %}{{ page.image | absolute_url }}{% else %}{{ "/assets/img/og-default.png" | absolute_url }}{% endif %}',
+      link: {
+        mobileWebUrl: window.location.href,
+        webUrl: window.location.href
+      }
+    },
+    buttons: [{
+      title: "포스트 보기",
+      link: {
+        mobileWebUrl: window.location.href,
+        webUrl: window.location.href
+      }
+    }]
+  });
+};
 </script>
 
 <script>
