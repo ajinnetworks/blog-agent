@@ -93,47 +93,100 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
-def load_reviewer_prompt() -> str:
-    prompt_path = Path(__file__).parent.parent / "prompts" / "reviewer_prompt.md"
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return f.read()
+
+REVIEW_PROMPT_SIMPLE = """다음 포스트를 100점 만점으로 평가해줘.
+기준: 전문성(40), 정확성(30), 가독성(30)
+JSON으로만 응답: {{"score": 점수, "pass": true/false, "reason": "한줄요약"}}
+포스트:
+{content}
+"""
+
+
+@retry_on_rate_limit(max_retries=3, wait_seconds=60)
+def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
+    """
+    여러 포스트를 1회 Gemini 호출로 일괄 검수.
+    Returns: 각 포스트에 대한 review_result 리스트
+    """
+    items = []
+    for i, post in enumerate(posts):
+        content_raw = post.get("content", "")
+        if isinstance(content_raw, list):
+            content_str = " ".join(str(c) for c in content_raw)
+        else:
+            content_str = str(content_raw)
+        items.append(
+            f"[포스트 {i+1}] 제목: {post.get('title', '')}\n"
+            f"본문 앞 400자:\n{content_str[:400]}"
+        )
+
+    batch_text = "\n\n".join(items)
+    prompt = f"""아래 {len(posts)}개 블로그 포스트를 각각 100점 만점으로 평가해줘.
+기준: 전문성(40), 정확성(30), 가독성(30)
+합격 기준: {min_score}점 이상
+
+{batch_text}
+
+반드시 아래 JSON 배열만 반환. 순서는 포스트 번호 순:
+[
+  {{"index": 1, "score": 점수, "pass": true/false, "reason": "한줄요약"}},
+  ...
+]
+"""
+    raw = get_gemini_response(prompt)
+    if "```" in raw:
+        parts = raw.split("```")
+        for part in parts:
+            part = part.strip()
+            if part.startswith("json"):
+                part = part[4:].strip()
+            if part.startswith("["):
+                raw = part
+                break
+
+    try:
+        results = json.loads(raw)
+    except json.JSONDecodeError as e:
+        logger.error(f"배치 검수 JSON 파싱 실패: {e}")
+        results = [{"index": i+1, "score": 0, "pass": False, "reason": f"파싱 실패: {e}"} for i in range(len(posts))]
+
+    reviews = []
+    for i, post in enumerate(posts):
+        r = next((x for x in results if x.get("index") == i+1), None)
+        if r is None:
+            r = {"score": 0, "pass": False, "reason": "결과 없음"}
+        score = r.get("score", 0)
+        passed = score >= min_score
+        reviews.append({
+            "total_score": score,
+            "breakdown": {},
+            "issues": [] if passed else [{"severity": "medium", "description": r.get("reason", "")}],
+            "pass": passed,
+            "min_score": min_score,
+            "revision_notes": r.get("reason", ""),
+        })
+        status = "합격" if passed else "불합격"
+        logger.info(f"[{i+1}/{len(posts)}] '{post.get('title', '')}' {status} ({score}/{min_score})")
+    return reviews
 
 
 @retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def review_post(post: dict) -> dict:
     """
-    단일 포스트 검수.
+    단일 포스트 검수 (배치가 불가한 경우 폴백용).
     Returns: review_result dict { total_score, breakdown, issues, pass, revision_notes }
     """
     config = load_config()
-    system_prompt = load_reviewer_prompt()
     min_score = config["reviewer"]["min_score"]
 
-    # content가 문자열이 아닌 경우 안전하게 변환
-    content_raw = post.get('content', '')
+    content_raw = post.get("content", "")
     if isinstance(content_raw, list):
-        content_str = ' '.join(str(c) for c in content_raw)
-    elif isinstance(content_raw, dict):
-        content_str = str(content_raw)
+        content_str = " ".join(str(c) for c in content_raw)
     else:
         content_str = str(content_raw)
 
-    user_prompt = f"""{system_prompt}
-
-아래 블로그 포스트를 검수하세요.
-
-제목: {post.get('title', '')}
-메타 설명: {post.get('meta_description', '')}
-태그: {post.get('tags', [])}
-SEO 키워드: {post.get('seo_keywords', [])}
-본문 (앞 500자):
-{content_str[:500]}...
-
-합격 기준: {min_score}점 이상
-JSON만 반환:
-"""
-
-    raw = get_gemini_response(user_prompt)
+    prompt = REVIEW_PROMPT_SIMPLE.format(content=content_str[:500])
+    raw = get_gemini_response(prompt)
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:
@@ -145,7 +198,17 @@ JSON만 반환:
                 break
 
     try:
-        review = json.loads(raw)
+        r = json.loads(raw)
+        score = r.get("score", 0)
+        passed = score >= min_score
+        review = {
+            "total_score": score,
+            "breakdown": {},
+            "issues": [] if passed else [{"severity": "medium", "description": r.get("reason", "")}],
+            "pass": passed,
+            "min_score": min_score,
+            "revision_notes": r.get("reason", ""),
+        }
     except json.JSONDecodeError as e:
         logger.error(f"검수 결과 JSON 파싱 실패: {e}")
         review = {
@@ -153,19 +216,12 @@ JSON만 반환:
             "breakdown": {},
             "issues": [{"severity": "high", "description": f"파싱 실패: {e}"}],
             "pass": False,
-            "revision_required": True,
-            "revision_notes": "검수 에이전트 오류 — 수동 확인 필요",
+            "min_score": min_score,
+            "revision_notes": "검수 에이전트 오류 - 수동 확인 필요",
         }
 
-    passed = review.get("total_score", 0) >= min_score
-    review["pass"] = passed
-    review["min_score"] = min_score
-
-    status = "✅ 합격" if passed else "❌ 불합격"
-    logger.info(
-        f"검수 결과: {status} | 점수: {review.get('total_score')}/{min_score} | "
-        f"이슈: {len(review.get('issues', []))}개"
-    )
+    status = "합격" if review["pass"] else "불합격"
+    logger.info(f"검수 결과: {status} | 점수: {review['total_score']}/{min_score}")
     return review
 
 
@@ -216,41 +272,44 @@ def revise_post(post: dict, review: dict) -> dict:
         return post
 
 
-def run_reviewer_agent(posts: list[dict], max_revisions: int = 2) -> list[dict]:
+def run_reviewer_agent(posts: list[dict], max_revisions: int = 1) -> list[dict]:
     """
-    포스트 리스트 전체 검수. 불합격 시 재작성 루프 실행.
+    포스트 리스트 전체 검수.
+    - 정상 포스트: 배치 1회 Gemini 호출로 일괄 검수 (API 호출 최소화)
+    - 불합격 포스트: 재작성 후 단일 검수 1회 (최대 max_revisions회)
     Returns: 검수 완료된 포스트 리스트 (review_result 포함)
     """
     logger.info(f"=== Reviewer Agent 시작: {len(posts)}개 포스트 ===")
-    reviewed_posts = []
+    config = load_config()
+    min_score = config["reviewer"]["min_score"]
 
-    for post in posts:
-        if post.get("error"):
-            logger.warning(f"오류 포스트 스킵: {post.get('title')}")
-            reviewed_posts.append(post)
+    # 오류 포스트 분리
+    error_posts = [p for p in posts if p.get("error")]
+    valid_posts = [p for p in posts if not p.get("error")]
+
+    # 배치 검수 (1회 Gemini 호출)
+    if valid_posts:
+        logger.info(f"배치 검수: {len(valid_posts)}개 포스트 -> 1회 API 호출")
+        batch_reviews = batch_review_posts(valid_posts, min_score)
+        for post, review in zip(valid_posts, batch_reviews):
+            post["review_result"] = review
+
+    # 불합격 포스트 재작성 (최대 max_revisions회, 단일 검수)
+    for post in valid_posts:
+        if post.get("review_result", {}).get("pass"):
             continue
-
-        current_post = post
-        for attempt in range(1, max_revisions + 2):  # +2: 초기 검수 포함
-            review = review_post(current_post)
-            current_post["review_result"] = review
-
+        for attempt in range(1, max_revisions + 1):
+            logger.info(f"재작성 시도 {attempt}/{max_revisions}: '{post.get('title')}'")
+            post = revise_post(post, post["review_result"])
+            review = review_post(post)
+            post["review_result"] = review
             if review["pass"]:
-                logger.info(f"'{current_post.get('title')}' 검수 합격 (시도 {attempt})")
                 break
+        else:
+            logger.warning(f"최대 재시도 초과 - '{post.get('title')}' 강제 통과")
+            post["review_result"]["forced_pass"] = True
 
-            if attempt <= max_revisions:
-                logger.info(f"재작성 시도 {attempt}/{max_revisions}")
-                current_post = revise_post(current_post, review)
-            else:
-                logger.warning(
-                    f"최대 재시도 초과 — '{current_post.get('title')}' 강제 통과"
-                )
-                current_post["review_result"]["forced_pass"] = True
-                break
-
-        reviewed_posts.append(current_post)
-
+    reviewed_posts = error_posts + valid_posts
     passed = sum(1 for p in reviewed_posts if p.get("review_result", {}).get("pass"))
     logger.info(f"검수 완료: {passed}/{len(reviewed_posts)}개 합격")
     return reviewed_posts

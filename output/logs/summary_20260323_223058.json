@@ -1,0 +1,32 @@
+{
+  "run_at": "2026-03-23T22:30:58.635139",
+  "platform": "github",
+  "dry_run": true,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "sk하이닉스",
+        "Coupang's User Base Recovers",
+        "Easy Payments Supplant Cards"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 3,
+      "scores": [
+        87,
+        82,
+        78
+      ]
+    },
+    "publisher": {
+      "skipped": true
+    }
+  },
+  "elapsed_seconds": 128.0
+}

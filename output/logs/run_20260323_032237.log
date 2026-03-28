@@ -1,0 +1,7 @@
+2026-03-23 03:22:37,401 [INFO] run_agent: GitHub 레포 초기화: ajinnetworks/ajinnetworks.github.io
+2026-03-23 03:22:39,570 [INFO] agents.github_publisher:   업로드: Gemfile
+2026-03-23 03:22:41,091 [INFO] agents.github_publisher:   업로드: index.md
+2026-03-23 03:22:42,610 [INFO] agents.github_publisher:   업로드: _config.yml
+2026-03-23 03:22:44,129 [INFO] agents.github_publisher:   업로드: _posts\2025-03-23-welcome.md
+2026-03-23 03:22:45,669 [INFO] agents.github_publisher:   업로드: .github\workflows\deploy.yml
+2026-03-23 03:22:45,670 [INFO] agents.github_publisher: 레포 초기화: 5개 업로드, 0개 스킵

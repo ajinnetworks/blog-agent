@@ -1,0 +1,36 @@
+{
+  "run_at": "2026-03-23T13:09:03.690803",
+  "platform": "github",
+  "dry_run": false,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "달러 환율",
+        "Coupang's User Base Recovers to the 28 Million Ran",
+        "Easy Payments Supplant Cards in Daily Transactions"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 2,
+      "scores": [
+        45,
+        78,
+        82
+      ]
+    },
+    "publisher": {
+      "platform": "github_pages",
+      "published": 0,
+      "failed": 2,
+      "commit_urls": [],
+      "blog_url": null
+    }
+  },
+  "elapsed_seconds": 304.0
+}

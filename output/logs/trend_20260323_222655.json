@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T22:26:55.793518",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "sk하이닉스",
+      "angle": "SK하이닉스의 반도체 제조 공정 자동화 기술과 AI 기반 품질관리 시스템 분석",
+      "reason": "반도체 대기업의 최신 자동화 기술은 기술 블로그 독자들의 관심이 높고 검색량도 안정적임",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "현대건설",
+      "angle": "현대건설의 스마트 건설 자동화 기술과 IoT 기반 건설 현장 관리 솔루션 소개",
+      "reason": "건설업계의 디지털 전환과 자동화 도입은 산업 기술 분야에서 주목받는 트렌드임",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "Coupang",
+      "angle": "쿠팡의 물류 자동화 시스템과 로켓배송을 가능하게 하는 AI 기술 심층 분석",
+      "reason": "이커머스 플랫폼의 물류 자동화는 기술 업계 종사자들이 벤치마킹하고 싶어하는 주제임",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

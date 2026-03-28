@@ -1,0 +1,36 @@
+{
+  "run_at": "2026-03-23T14:29:11.217577",
+  "platform": "github",
+  "dry_run": false,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "Coupang's User Base Recovers to the 28 Million",
+        "Easy Payments Supplant Cards in Daily Transactions",
+        "Seoul's Brand New Tram Line"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 1,
+      "scores": [
+        65,
+        82,
+        68
+      ]
+    },
+    "publisher": {
+      "platform": "github_pages",
+      "published": 0,
+      "failed": 1,
+      "commit_urls": [],
+      "blog_url": null
+    }
+  },
+  "elapsed_seconds": 316.3
+}

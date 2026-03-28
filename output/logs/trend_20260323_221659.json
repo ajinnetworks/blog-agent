@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T22:16:59.935617",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "sk하이닉스",
+      "angle": "SK하이닉스의 AI 메모리 반도체 자동화 생산 기술과 스마트팩토리 혁신 사례 분석",
+      "reason": "반도체 업계의 자동화 기술은 기술 블로그 독자들의 높은 관심사이며 SK하이닉스는 검색량이 높은 키워드",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "나스닥 선물",
+      "angle": "나스닥 선물 거래를 위한 자동 투자 봇 개발과 알고리즘 트레이딩 기술 가이드",
+      "reason": "투자 자동화는 핀테크 영역에서 인기 주제이며 나스닥 관련 검색 수요가 지속적으로 높음",
+      "estimated_search_volume": "medium"
+    },
+    {
+      "keyword": "Coupang",
+      "angle": "쿠팡의 물류 자동화 시스템과 AI 기반 배송 최적화 기술 분석",
+      "reason": "이커머스 자동화 기술은 개발자들에게 실용적 관심사이며 쿠팡의 기술 혁신은 검색 가치가 높음",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

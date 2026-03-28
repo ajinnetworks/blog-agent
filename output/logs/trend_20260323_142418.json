@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T14:24:18.295054",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "Seoul's Brand New Tram Line",
+      "angle": "서울 신형 트램의 자동화 운행 시스템과 스마트 교통 기술 분석",
+      "reason": "대중교통 자동화 기술은 기술/자동화 도메인과 직접 연관되며 서울 트램 관련 검색 수요가 높을 것으로 예상",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "Coupang's User Base Recovers",
+      "angle": "쿠팡의 사용자 복구를 위한 자동화된 마케팅 시스템과 데이터 분석 기술",
+      "reason": "대형 이커머스 플랫폼의 자동화 기술과 데이터 분석은 기술 블로그 독자들의 관심사",
+      "estimated_search_volume": "medium"
+    },
+    {
+      "keyword": "Easy Payments Supplant Cards",
+      "angle": "간편결제 시스템의 자동화 기술과 카드 결제를 대체하는 핀테크 혁신",
+      "reason": "핀테크 자동화 기술은 기술 도메인과 밀접하며 결제 시스템 혁신에 대한 관심이 높음",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

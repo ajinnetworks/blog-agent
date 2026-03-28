@@ -1,0 +1,41 @@
+{
+  "run_at": "2026-03-28T13:47:43.480535",
+  "platform": "github",
+  "dry_run": false,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "에너지 가격 상승과 스마트팩토리 FEMS",
+        "경제 성장률 둔화 속 제조 혁신 전략",
+        "글로벌 무역 관세 변화와 스마트 제조 경쟁력"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 3,
+      "scores": [
+        85,
+        82,
+        84
+      ]
+    },
+    "publisher": {
+      "platform": "github_pages",
+      "dry_run": false,
+      "published": 3,
+      "failed": 0,
+      "commit_urls": [
+        "https://github.com/ajinnetworks/ajinnetworks.github.io/commit/fee9641e03f4cf1db17a2849d37ee95eac5b87bd",
+        "https://github.com/ajinnetworks/ajinnetworks.github.io/commit/1901031d2985cb73bb417ed4f52b1cafe23b2424",
+        "https://github.com/ajinnetworks/ajinnetworks.github.io/commit/9580ab4421d34e5d7ec176cd9992f449449d72bd"
+      ],
+      "blog_url": "https://ajinnetworks.github.io"
+    }
+  },
+  "elapsed_seconds": 128.7
+}

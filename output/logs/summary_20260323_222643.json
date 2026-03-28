@@ -1,0 +1,32 @@
+{
+  "run_at": "2026-03-23T22:26:43.731220",
+  "platform": "github",
+  "dry_run": true,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "sk하이닉스",
+        "현대건설",
+        "Coupang"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 3,
+      "scores": [
+        82,
+        82,
+        78
+      ]
+    },
+    "publisher": {
+      "skipped": true
+    }
+  },
+  "elapsed_seconds": 134.2
+}

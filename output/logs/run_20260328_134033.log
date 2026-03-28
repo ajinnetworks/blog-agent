@@ -1,0 +1,62 @@
+2026-03-28 13:40:33,542 [INFO] run_agent: ============================================================
+2026-03-28 13:40:33,543 [INFO] run_agent: Blog Agent 시작: 2026-03-28 13:40:33
+2026-03-28 13:40:33,555 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: DRY-RUN
+2026-03-28 13:40:33,555 [INFO] run_agent: ============================================================
+2026-03-28 13:40:33,555 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-28 13:40:33,558 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-28 13:40:34,740 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-28 13:40:35,123 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-28 13:40:36,698 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-28 13:40:36,700 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 Gemini 전달
+2026-03-28 13:40:53,373 [INFO] agents.trend_agent: Gemini가 3개 주제 선정 완료
+2026-03-28 13:40:53,375 [INFO] agents.trend_agent: 트렌드 에이전트 완료 → E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\agents\..\output\logs\trend_20260328_134053.json
+2026-03-28 13:40:53,375 [INFO] run_agent: 선정 주제: ['에너지 가격 상승과 스마트팩토리 FEMS', '경제 성장률 하향과 제조업 디지털 전환', '롯데리아와 푸드테크 스마트팩토리']
+2026-03-28 13:40:53,375 [INFO] run_agent: 
+[STAGE 2] 포스트 작성
+2026-03-28 13:40:53,375 [INFO] agents.writer_agent: === Writer Agent 시작: 3개 주제 ===
+2026-03-28 13:40:53,375 [INFO] agents.writer_agent: [1/3] 작성 중: 에너지 가격 상승과 스마트팩토리 FEMS
+2026-03-28 13:40:53,389 [INFO] agents.writer_agent: Writer Agent: '에너지 가격 상승과 스마트팩토리 FEMS' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:41:15,260 [INFO] agents.writer_agent: 작성 완료: '고에너지 비용 시대의 생존 전략: 스마트팩토리 FEMS로 제조 원가 절감하기' | 카테고리: 스마트팩토리 | 1637자
+2026-03-28 13:41:15,262 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134115_고에너지 비용 시대의 생존 전략_ 스마트팩토리 FEMS.md
+2026-03-28 13:41:15,262 [INFO] agents.writer_agent: [2/3] 작성 중: 경제 성장률 하향과 제조업 디지털 전환
+2026-03-28 13:41:15,267 [INFO] agents.writer_agent: Writer Agent: '경제 성장률 하향과 제조업 디지털 전환' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:41:39,165 [INFO] agents.writer_agent: 작성 완료: '저성장 시대의 돌파구, 제조업 디지털 전환과 스마트팩토리 고도화 전략' | 카테고리: 스마트팩토리 | 1445자
+2026-03-28 13:41:39,170 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134139_저성장 시대의 돌파구_ 제조업 디지털 전환과 스마트팩토.md
+2026-03-28 13:41:39,170 [INFO] agents.writer_agent: [3/3] 작성 중: 롯데리아와 푸드테크 스마트팩토리
+2026-03-28 13:41:39,173 [INFO] agents.writer_agent: Writer Agent: '롯데리아와 푸드테크 스마트팩토리' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:41:57,385 [INFO] agents.writer_agent: 작성 완료: '롯데리아 조리 로봇으로 본 푸드테크와 스마트팩토리 가속화 트렌드' | 카테고리: 스마트팩토리 | 1694자
+2026-03-28 13:41:57,388 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134157_롯데리아 조리 로봇으로 본 푸드테크와 스마트팩토리 가속.md
+2026-03-28 13:41:57,388 [INFO] agents.writer_agent: Writer Agent 완료: 3개 포스트 생성
+2026-03-28 13:41:57,388 [INFO] run_agent: 
+[STAGE 3] 품질 검수
+2026-03-28 13:41:57,388 [INFO] agents.reviewer_agent: === Reviewer Agent 시작: 3개 포스트 ===
+2026-03-28 13:42:13,087 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 91/75 | 이슈: 2개
+2026-03-28 13:42:13,087 [INFO] agents.reviewer_agent: '고에너지 비용 시대의 생존 전략: 스마트팩토리 FEMS로 제조 원가 절감하기' 검수 합격 (시도 1)
+2026-03-28 13:42:34,769 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 83/75 | 이슈: 2개
+2026-03-28 13:42:34,769 [INFO] agents.reviewer_agent: '저성장 시대의 돌파구, 제조업 디지털 전환과 스마트팩토리 고도화 전략' 검수 합격 (시도 1)
+2026-03-28 13:42:59,920 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 84/75 | 이슈: 3개
+2026-03-28 13:42:59,920 [INFO] agents.reviewer_agent: '롯데리아 조리 로봇으로 본 푸드테크와 스마트팩토리 가속화 트렌드' 검수 합격 (시도 1)
+2026-03-28 13:42:59,920 [INFO] agents.reviewer_agent: 검수 완료: 3/3개 합격
+2026-03-28 13:42:59,920 [INFO] run_agent: 
+[STAGE 4] 발행 → GitHub Pages [DRY-RUN]
+2026-03-28 13:42:59,920 [INFO] agents.github_publisher: === GitHub Pages Publisher 시작 === [DRY-RUN]
+2026-03-28 13:42:59,922 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-고에너지-비용-시대의-생존-전략-스마트팩토리-FEMS로-제조-원가-절감하기.md (2488자)
+2026-03-28 13:42:59,922 [INFO] agents.github_publisher: [dry-run] 커밋 차단 — 실제 GitHub 전송 없음: _posts/2026-03-28-고에너지-비용-시대의-생존-전략-스마트팩토리-FEMS로-제조-원가-절감하기.md
+2026-03-28 13:42:59,927 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134259_고에너지_비용_시대의_생존_전략__스마트팩토리_FEMS.json
+2026-03-28 13:42:59,927 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-저성장-시대의-돌파구-제조업-디지털-전환과-스마트팩토리-고도화-전략.md (2237자)
+2026-03-28 13:42:59,927 [INFO] agents.github_publisher: [dry-run] 커밋 차단 — 실제 GitHub 전송 없음: _posts/2026-03-28-저성장-시대의-돌파구-제조업-디지털-전환과-스마트팩토리-고도화-전략.md
+2026-03-28 13:42:59,928 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134259_저성장_시대의_돌파구__제조업_디지털_전환과_스마트팩토.json
+2026-03-28 13:42:59,929 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-롯데리아-조리-로봇으로-본-푸드테크와-스마트팩토리-가속화-트렌드.md (2540자)
+2026-03-28 13:42:59,929 [INFO] agents.github_publisher: [dry-run] 커밋 차단 — 실제 GitHub 전송 없음: _posts/2026-03-28-롯데리아-조리-로봇으로-본-푸드테크와-스마트팩토리-가속화-트렌드.md
+2026-03-28 13:42:59,930 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134259_롯데리아_조리_로봇으로_본_푸드테크와_스마트팩토리_가속.json
+2026-03-28 13:42:59,930 [INFO] agents.github_publisher: GitHub Pages Publisher 완료: 3/3개 발행
+2026-03-28 13:42:59,931 [INFO] run_agent: 
+============================================================
+2026-03-28 13:42:59,931 [INFO] run_agent:   플랫폼: GitHub Pages
+2026-03-28 13:42:59,931 [INFO] run_agent:   주제: 3개
+2026-03-28 13:42:59,931 [INFO] run_agent:   작성: 3개
+2026-03-28 13:42:59,931 [INFO] run_agent:   합격: 3개
+2026-03-28 13:42:59,931 [INFO] run_agent:   [DRY-RUN] 커밋 차단: 3개
+2026-03-28 13:42:59,931 [INFO] run_agent:   시간: 146.4초
+2026-03-28 13:42:59,931 [INFO] run_agent: ============================================================

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T13:09:15.423753",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "달러 환율",
+      "angle": "환율 변동 자동 알림 시스템 구축하기",
+      "reason": "환율은 지속적인 관심사이며 자동화 도구 개발 주제로 연결하기 좋음",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "Coupang's User Base Recovers to the 28 Million Ran",
+      "angle": "쿠팡 같은 대규모 서비스의 사용자 증가 자동 분석 시스템",
+      "reason": "대형 플랫폼의 데이터 분석과 모니터링 자동화는 기술 블로그 독자들이 관심 있어 할 주제",
+      "estimated_search_volume": "medium"
+    },
+    {
+      "keyword": "Easy Payments Supplant Cards in Daily Transactions",
+      "angle": "간편결제 시스템의 기술적 구조와 자동화된 결제 프로세스 분석",
+      "reason": "핀테크와 결제 자동화는 현재 뜨거운 기술 트렌드이며 검색 수요가 높음",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

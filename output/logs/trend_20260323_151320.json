@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T15:13:20.630522",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "Coupang's User Base Recovers to the 28 Million Ran",
+      "angle": "쿠팡의 사용자 복구 전략과 이커머스 플랫폼 자동화 기술 분석",
+      "reason": "대형 이커머스 플랫폼의 기술적 복구 과정과 자동화 시스템에 대한 관심이 높음",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "Easy Payments Supplant Cards in Daily Transactions",
+      "angle": "간편결제 시스템의 자동화 기술과 카드 결제를 대체하는 핀테크 혁신",
+      "reason": "결제 자동화 기술과 핀테크 트렌드는 기술 블로그 독자들의 높은 관심 주제",
+      "estimated_search_volume": "medium"
+    },
+    {
+      "keyword": "Seoul's Brand New Tram Line",
+      "angle": "서울 신규 트램 노선의 스마트 교통 자동화 시스템과 IoT 기술 적용",
+      "reason": "대중교통 자동화와 스마트시티 기술은 검색 수요가 지속적으로 증가하는 분야",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

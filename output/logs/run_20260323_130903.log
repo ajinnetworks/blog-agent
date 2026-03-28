@@ -1,0 +1,95 @@
+2026-03-23 13:09:03,690 [INFO] run_agent: ============================================================
+2026-03-23 13:09:03,691 [INFO] run_agent: Blog Agent 시작: 2026-03-23 13:09:03
+2026-03-23 13:09:03,691 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: 실제 발행
+2026-03-23 13:09:03,691 [INFO] run_agent: ============================================================
+2026-03-23 13:09:03,691 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-23 13:09:03,694 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-23 13:09:04,734 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-23 13:09:05,115 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-23 13:09:06,383 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-23 13:09:06,385 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 수집됨
+2026-03-23 13:09:15,404 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:09:15,422 [INFO] agents.trend_agent: Claude가 3개 주제 선정 완료
+2026-03-23 13:09:15,424 [INFO] agents.trend_agent: 트렌드 에이전트 완료 → E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\agents\..\output\logs\trend_20260323_130915.json
+2026-03-23 13:09:15,424 [INFO] run_agent: 선정 주제: ['달러 환율', "Coupang's User Base Recovers to the 28 Million Ran", 'Easy Payments Supplant Cards in Daily Transactions']
+2026-03-23 13:09:15,424 [INFO] run_agent: 
+[STAGE 2] 포스트 작성
+2026-03-23 13:09:15,424 [INFO] agents.writer_agent: === Writer Agent 시작: 3개 주제 ===
+2026-03-23 13:09:15,424 [INFO] agents.writer_agent: [1/3] 작성 중: 달러 환율
+2026-03-23 13:09:15,769 [INFO] agents.writer_agent: Writer Agent: '달러 환율' 작성 시작
+2026-03-23 13:09:50,277 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:09:50,278 [ERROR] agents.writer_agent: JSON 파싱 실패: Unterminated string starting at: line 6 column 14 (char 244)
+원문: {
+  "title": "달러 환율 변동 실시간 알림 받기: Python으로 나만의 환율 모니터링 시스템 만들기",
+  "meta_description": "달러 환율 변동을 실시간으로 추적하고 자동 알림을 받는 시스템을 Python으로 직접 구축하는 방법을 단계별로 알아보세요.",
+  "tags": ["달러환율", "Python", "자동화", "API"
+2026-03-23 13:09:50,279 [INFO] agents.writer_agent: 작성 완료: '달러 환율' (859자)
+2026-03-23 13:09:50,281 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_130950_달러 환율.md
+2026-03-23 13:09:50,281 [INFO] agents.writer_agent: [2/3] 작성 중: Coupang's User Base Recovers to the 28 Million Ran
+2026-03-23 13:09:50,627 [INFO] agents.writer_agent: Writer Agent: 'Coupang's User Base Recovers to the 28 Million Ran' 작성 시작
+2026-03-23 13:10:18,980 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:10:18,981 [ERROR] agents.writer_agent: JSON 파싱 실패: Unterminated string starting at: line 6 column 14 (char 255)
+원문: {
+  "title": "쿠팡의 2,800만 사용자 회복, 대규모 플랫폼의 자동 분석 시스템은 어떻게 작동할까?",
+  "meta_description": "쿠팡의 사용자 기반이 2,800만 명대로 회복되며 보여준 대형 플랫폼의 데이터 분석과 모니터링 자동화 시스템에 대해 알아보세요.",
+  "tags": ["쿠팡", "사용자분석", "데이터모니터링", "
+2026-03-23 13:10:18,981 [INFO] agents.writer_agent: 작성 완료: 'Coupang's User Base Recovers to the 28 Million Ran' (845자)
+2026-03-23 13:10:18,983 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_131018_Coupang_s User Base Recovers t.md
+2026-03-23 13:10:18,983 [INFO] agents.writer_agent: [3/3] 작성 중: Easy Payments Supplant Cards in Daily Transactions
+2026-03-23 13:10:19,319 [INFO] agents.writer_agent: Writer Agent: 'Easy Payments Supplant Cards in Daily Transactions' 작성 시작
+2026-03-23 13:10:54,238 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:10:54,239 [INFO] agents.writer_agent: 작성 완료: '간편결제가 카드를 대체하는 이유: 기술적 구조와 자동화 프로세스 분석' (1509자)
+2026-03-23 13:10:54,241 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_131054_간편결제가 카드를 대체하는 이유_ 기술적 구조와 자동화.md
+2026-03-23 13:10:54,241 [INFO] agents.writer_agent: Writer Agent 완료: 3개 포스트 생성
+2026-03-23 13:10:54,241 [INFO] run_agent: 
+[STAGE 3] 품질 검수
+2026-03-23 13:10:54,242 [INFO] agents.reviewer_agent: === Reviewer Agent 시작: 3개 포스트 ===
+2026-03-23 13:11:01,509 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:11:01,510 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 45/75 | 이슈: 6개
+2026-03-23 13:11:01,511 [INFO] agents.reviewer_agent: 재작성 시도 1/2
+2026-03-23 13:11:43,167 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:11:43,169 [ERROR] agents.reviewer_agent: 재작성 결과 파싱 실패 — 원본 유지
+2026-03-23 13:11:51,540 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:11:51,541 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 42/75 | 이슈: 6개
+2026-03-23 13:11:51,541 [INFO] agents.reviewer_agent: 재작성 시도 2/2
+2026-03-23 13:12:35,715 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:12:35,716 [ERROR] agents.reviewer_agent: 재작성 결과 파싱 실패 — 원본 유지
+2026-03-23 13:12:42,728 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:12:42,729 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 45/75 | 이슈: 6개
+2026-03-23 13:12:42,730 [WARNING] agents.reviewer_agent: 최대 재시도 초과 — '달러 환율' 강제 통과
+2026-03-23 13:12:50,739 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:12:50,740 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 42/75 | 이슈: 7개
+2026-03-23 13:12:50,740 [INFO] agents.reviewer_agent: 재작성 시도 1/2
+2026-03-23 13:13:15,986 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:13:15,988 [INFO] agents.reviewer_agent: 재작성 완료
+2026-03-23 13:13:23,824 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:13:23,825 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 42/75 | 이슈: 7개
+2026-03-23 13:13:23,826 [INFO] agents.reviewer_agent: 재작성 시도 2/2
+2026-03-23 13:13:52,449 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:13:52,450 [INFO] agents.reviewer_agent: 재작성 완료
+2026-03-23 13:13:58,862 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:13:58,863 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 78/75 | 이슈: 4개
+2026-03-23 13:13:58,864 [INFO] agents.reviewer_agent: '쿠팡 사용자 수 2800만 명대 회복, 성장 동력 분석' 검수 합격 (시도 3)
+2026-03-23 13:14:06,371 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 13:14:06,372 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 82/75 | 이슈: 5개
+2026-03-23 13:14:06,373 [INFO] agents.reviewer_agent: '간편결제가 카드를 대체하는 이유: 기술적 구조와 자동화 프로세스 분석' 검수 합격 (시도 1)
+2026-03-23 13:14:06,373 [INFO] agents.reviewer_agent: 검수 완료: 2/3개 합격
+2026-03-23 13:14:06,373 [INFO] run_agent: 
+[STAGE 4] 발행 → GitHub Pages
+2026-03-23 13:14:06,373 [INFO] agents.github_publisher: === GitHub Pages Publisher 시작 ===
+2026-03-23 13:14:06,373 [WARNING] agents.github_publisher: 검수 미합격 스킵: '달러 환율' (점수: 45)
+2026-03-23 13:14:06,374 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-23-쿠팡-사용자-수-2800만-명대-회복-성장-동력-분석.md (1880자)
+2026-03-23 13:14:06,985 [ERROR] agents.github_publisher: GitHub API 오류 '쿠팡 사용자 수 2800만 명대 회복, 성장 동력 분석': 401 {'message': 'Bad credentials', 'documentation_url': 'https://docs.github.com/rest', 'status': '401'}
+2026-03-23 13:14:06,986 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-23-간편결제가-카드를-대체하는-이유-기술적-구조와-자동화-프로세스-분석.md (2280자)
+2026-03-23 13:14:07,680 [ERROR] agents.github_publisher: GitHub API 오류 '간편결제가 카드를 대체하는 이유: 기술적 구조와 자동화 프로세스 분석': 401 {'message': 'Bad credentials', 'documentation_url': 'https://docs.github.com/rest', 'status': '401'}
+2026-03-23 13:14:07,680 [INFO] agents.github_publisher: GitHub Pages Publisher 완료: 0/3개 발행
+2026-03-23 13:14:07,682 [INFO] run_agent: 
+============================================================
+2026-03-23 13:14:07,682 [INFO] run_agent:   플랫폼: GitHub Pages
+2026-03-23 13:14:07,682 [INFO] run_agent:   주제: 3개
+2026-03-23 13:14:07,682 [INFO] run_agent:   작성: 3개
+2026-03-23 13:14:07,682 [INFO] run_agent:   합격: 2개
+2026-03-23 13:14:07,682 [INFO] run_agent:   발행: 0개
+2026-03-23 13:14:07,682 [INFO] run_agent:   시간: 304.0초
+2026-03-23 13:14:07,682 [INFO] run_agent: ============================================================

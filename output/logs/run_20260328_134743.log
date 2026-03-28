@@ -1,0 +1,66 @@
+2026-03-28 13:47:43,480 [INFO] run_agent: ============================================================
+2026-03-28 13:47:43,480 [INFO] run_agent: Blog Agent 시작: 2026-03-28 13:47:43
+2026-03-28 13:47:43,493 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: 실제 발행
+2026-03-28 13:47:43,493 [INFO] run_agent: ============================================================
+2026-03-28 13:47:43,494 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-28 13:47:43,497 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-28 13:47:44,751 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-28 13:47:45,137 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-28 13:47:46,570 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-28 13:47:46,572 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 Gemini 전달
+2026-03-28 13:47:57,568 [INFO] agents.trend_agent: Gemini가 3개 주제 선정 완료
+2026-03-28 13:47:57,569 [INFO] agents.trend_agent: 트렌드 에이전트 완료 → E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\agents\..\output\logs\trend_20260328_134757.json
+2026-03-28 13:47:57,569 [INFO] run_agent: 선정 주제: ['에너지 가격 상승과 스마트팩토리 FEMS', '경제 성장률 둔화 속 제조 혁신 전략', '글로벌 무역 관세 변화와 스마트 제조 경쟁력']
+2026-03-28 13:47:57,569 [INFO] run_agent: 
+[STAGE 2] 포스트 작성
+2026-03-28 13:47:57,569 [INFO] agents.writer_agent: === Writer Agent 시작: 3개 주제 ===
+2026-03-28 13:47:57,569 [INFO] agents.writer_agent: [1/3] 작성 중: 에너지 가격 상승과 스마트팩토리 FEMS
+2026-03-28 13:47:57,572 [INFO] agents.writer_agent: Writer Agent: '에너지 가격 상승과 스마트팩토리 FEMS' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:48:18,396 [INFO] agents.writer_agent: 작성 완료: '에너지 비용 폭등 시대, 스마트팩토리 FEMS로 제조 원가 절감하는 방법' | 카테고리: 스마트팩토리 | 1809자
+2026-03-28 13:48:18,400 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134818_에너지 비용 폭등 시대_ 스마트팩토리 FEMS로 제조 .md
+2026-03-28 13:48:18,400 [INFO] agents.writer_agent: [2/3] 작성 중: 경제 성장률 둔화 속 제조 혁신 전략
+2026-03-28 13:48:18,404 [INFO] agents.writer_agent: Writer Agent: '경제 성장률 둔화 속 제조 혁신 전략' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:48:44,624 [INFO] agents.writer_agent: 작성 완료: '경제 성장률 둔화 시대의 제조 혁신, 스마트팩토리 고도화가 해답인 이유' | 카테고리: 스마트팩토리 | 1619자
+2026-03-28 13:48:44,626 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134844_경제 성장률 둔화 시대의 제조 혁신_ 스마트팩토리 고도.md
+2026-03-28 13:48:44,627 [INFO] agents.writer_agent: [3/3] 작성 중: 글로벌 무역 관세 변화와 스마트 제조 경쟁력
+2026-03-28 13:48:44,631 [INFO] agents.writer_agent: Writer Agent: '글로벌 무역 관세 변화와 스마트 제조 경쟁력' 작성 시작 (예상 카테고리: 스마트팩토리)
+2026-03-28 13:49:04,865 [INFO] agents.writer_agent: 작성 완료: '글로벌 관세 장벽과 무역 전쟁, 스마트팩토리로 제조 원가 경쟁력 돌파하기' | 카테고리: 스마트팩토리 | 1633자
+2026-03-28 13:49:04,870 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260328_134904_글로벌 관세 장벽과 무역 전쟁_ 스마트팩토리로 제조 원.md
+2026-03-28 13:49:04,870 [INFO] agents.writer_agent: Writer Agent 완료: 3개 포스트 생성
+2026-03-28 13:49:04,870 [INFO] run_agent: 
+[STAGE 3] 품질 검수
+2026-03-28 13:49:04,870 [INFO] agents.reviewer_agent: === Reviewer Agent 시작: 3개 포스트 ===
+2026-03-28 13:49:19,156 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 85/75 | 이슈: 2개
+2026-03-28 13:49:19,156 [INFO] agents.reviewer_agent: '에너지 비용 폭등 시대, 스마트팩토리 FEMS로 제조 원가 절감하는 방법' 검수 합격 (시도 1)
+2026-03-28 13:49:27,362 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 82/75 | 이슈: 3개
+2026-03-28 13:49:27,363 [INFO] agents.reviewer_agent: '경제 성장률 둔화 시대의 제조 혁신, 스마트팩토리 고도화가 해답인 이유' 검수 합격 (시도 1)
+2026-03-28 13:49:46,214 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 84/75 | 이슈: 3개
+2026-03-28 13:49:46,214 [INFO] agents.reviewer_agent: '글로벌 관세 장벽과 무역 전쟁, 스마트팩토리로 제조 원가 경쟁력 돌파하기' 검수 합격 (시도 1)
+2026-03-28 13:49:46,215 [INFO] agents.reviewer_agent: 검수 완료: 3/3개 합격
+2026-03-28 13:49:46,215 [INFO] run_agent: 
+[STAGE 4] 발행 → GitHub Pages
+2026-03-28 13:49:46,215 [INFO] agents.github_publisher: === GitHub Pages Publisher 시작 ===
+2026-03-28 13:49:46,216 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-에너지-비용-폭등-시대-스마트팩토리-FEMS로-제조-원가-절감하는-방법.md (2712자)
+2026-03-28 13:49:46,927 [INFO] agents.github_publisher: GitHub 커밋 시도: ajinnetworks/ajinnetworks.github.io/_posts/2026-03-28-에너지-비용-폭등-시대-스마트팩토리-FEMS로-제조-원가-절감하는-방법.md
+2026-03-28 13:49:48,176 [INFO] agents.github_publisher: ✅ 커밋 신규 생성 완료: _posts/2026-03-28-에너지-비용-폭등-시대-스마트팩토리-FEMS로-제조-원가-절감하는-방법.md (sha: fee9641e)
+2026-03-28 13:49:48,180 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134948_에너지_비용_폭등_시대__스마트팩토리_FEMS로_제조_.json
+2026-03-28 13:49:48,180 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-경제-성장률-둔화-시대의-제조-혁신-스마트팩토리-고도화가-해답인-이유.md (2465자)
+2026-03-28 13:49:48,941 [INFO] agents.github_publisher: GitHub 커밋 시도: ajinnetworks/ajinnetworks.github.io/_posts/2026-03-28-경제-성장률-둔화-시대의-제조-혁신-스마트팩토리-고도화가-해답인-이유.md
+2026-03-28 13:49:50,261 [INFO] agents.github_publisher: ✅ 커밋 신규 생성 완료: _posts/2026-03-28-경제-성장률-둔화-시대의-제조-혁신-스마트팩토리-고도화가-해답인-이유.md (sha: 1901031d)
+2026-03-28 13:49:50,264 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134950_경제_성장률_둔화_시대의_제조_혁신__스마트팩토리_고도.json
+2026-03-28 13:49:50,265 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-28-글로벌-관세-장벽과-무역-전쟁-스마트팩토리로-제조-원가-경쟁력-돌파하기.md (2481자)
+2026-03-28 13:49:50,986 [INFO] agents.github_publisher: GitHub 커밋 시도: ajinnetworks/ajinnetworks.github.io/_posts/2026-03-28-글로벌-관세-장벽과-무역-전쟁-스마트팩토리로-제조-원가-경쟁력-돌파하기.md
+2026-03-28 13:49:52,184 [INFO] agents.github_publisher: ✅ 커밋 신규 생성 완료: _posts/2026-03-28-글로벌-관세-장벽과-무역-전쟁-스마트팩토리로-제조-원가-경쟁력-돌파하기.md (sha: 9580ab44)
+2026-03-28 13:49:52,186 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260328_134952_글로벌_관세_장벽과_무역_전쟁__스마트팩토리로_제조_원.json
+2026-03-28 13:49:52,187 [INFO] agents.github_publisher: GitHub Pages Publisher 완료: 3/3개 발행
+2026-03-28 13:49:52,188 [INFO] run_agent: 
+============================================================
+2026-03-28 13:49:52,188 [INFO] run_agent:   플랫폼: GitHub Pages
+2026-03-28 13:49:52,188 [INFO] run_agent:   주제: 3개
+2026-03-28 13:49:52,188 [INFO] run_agent:   작성: 3개
+2026-03-28 13:49:52,188 [INFO] run_agent:   합격: 3개
+2026-03-28 13:49:52,188 [INFO] run_agent:   발행: 3개
+2026-03-28 13:49:52,188 [INFO] run_agent:   URL : https://ajinnetworks.github.io
+2026-03-28 13:49:52,188 [INFO] run_agent:   시간: 128.7초
+2026-03-28 13:49:52,188 [INFO] run_agent: ============================================================

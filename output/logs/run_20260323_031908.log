@@ -1,0 +1,2 @@
+2026-03-23 03:19:08,691 [ERROR] run_agent: 필수 환경변수 미설정: ['GITHUB_TOKEN', 'GITHUB_REPO']
+config/.env.sample 참고 후 .env에 추가하세요.

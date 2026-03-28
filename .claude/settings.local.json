@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"c:/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/src/App.jsx\")",
+      "Bash(echo $GITHUB_TOKEN)",
+      "Bash(python -c \"import os; print\\(''시스템 env:'', os.environ.get\\(''GITHUB_TOKEN'',''없음''\\)[:12]\\)\")",
+      "Bash(pip show:*)",
+      "Bash(python -c \":*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(cat \"c:/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/package.json\")",
+      "Bash(ls 'c:/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/data/')",
+      "Bash(ls \"c:/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/.env\")",
+      "Bash(python3 -c \":*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"const pkg=require\\(''./package.json''\\); console.log\\(''nodemailer:'', pkg.dependencies.nodemailer || ''없음''\\)\")",
+      "Bash(ls \"c:/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/.env.example\")",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(echo \"=== $f ===\")",
+      "Bash(sed -n '1,/^---$/{ /^---$/q; p }' \"e:\\\\아진네트웍스\\\\Claude Code\\\\블로그 제작\\\\blog_agent\\\\github_pages\\\\_posts/$f\")",
+      "Bash(done)",
+      "Read(//e/아진네트웍스/Claude Code/블로그 제작/blog_agent/github_pages/_posts/**)",
+      "Bash(ls \"e:\\\\아진네트웍스\\\\Claude Code\\\\블로그 제작\\\\blog_agent\\\\github_pages\\\\assets\\\\img\"\" 2>/dev/null || echo \"디렉토리 없음 \")",
+      "Bash(find 'e:/아진네트웍스/Claude Code/블로그 제작/blog_agent' -name *.png -o -name *.jpg -o -name *.svg)",
+      "Read(//e/아진네트웍스/Claude Code/블로그 제작/**)",
+      "Bash(gh run:*)",
+      "Bash(where gh:*)"
+    ]
+  }
+}

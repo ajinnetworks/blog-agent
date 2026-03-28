@@ -1,0 +1,80 @@
+2026-03-23 15:13:09,741 [INFO] run_agent: ============================================================
+2026-03-23 15:13:09,742 [INFO] run_agent: Blog Agent 시작: 2026-03-23 15:13:09
+2026-03-23 15:13:09,742 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: 실제 발행
+2026-03-23 15:13:09,742 [INFO] run_agent: ============================================================
+2026-03-23 15:13:09,742 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-23 15:13:09,745 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-23 15:13:10,827 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-23 15:13:11,201 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-23 15:13:12,478 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-23 15:13:12,479 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 수집됨
+2026-03-23 15:13:20,611 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:13:20,629 [INFO] agents.trend_agent: Claude가 3개 주제 선정 완료
+2026-03-23 15:13:20,630 [INFO] agents.trend_agent: 트렌드 에이전트 완료 → E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\agents\..\output\logs\trend_20260323_151320.json
+2026-03-23 15:13:20,631 [INFO] run_agent: 선정 주제: ["Coupang's User Base Recovers to the 28 Million Ran", 'Easy Payments Supplant Cards in Daily Transactions', "Seoul's Brand New Tram Line"]
+2026-03-23 15:13:20,631 [INFO] run_agent: 
+[STAGE 2] 포스트 작성
+2026-03-23 15:13:20,631 [INFO] agents.writer_agent: === Writer Agent 시작: 3개 주제 ===
+2026-03-23 15:13:20,631 [INFO] agents.writer_agent: [1/3] 작성 중: Coupang's User Base Recovers to the 28 Million Ran
+2026-03-23 15:13:20,981 [INFO] agents.writer_agent: Writer Agent: 'Coupang's User Base Recovers to the 28 Million Ran' 작성 시작
+2026-03-23 15:13:56,655 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:13:56,656 [INFO] agents.writer_agent: 작성 완료: '쿠팡 2800만 사용자 복구의 비밀: 이커머스 자동화 기술의 힘' (1596자)
+2026-03-23 15:13:56,658 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_151356_쿠팡 2800만 사용자 복구의 비밀_ 이커머스 자동화 .md
+2026-03-23 15:13:56,658 [INFO] agents.writer_agent: [2/3] 작성 중: Easy Payments Supplant Cards in Daily Transactions
+2026-03-23 15:13:57,005 [INFO] agents.writer_agent: Writer Agent: 'Easy Payments Supplant Cards in Daily Transactions' 작성 시작
+2026-03-23 15:14:32,802 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:14:32,803 [INFO] agents.writer_agent: 작성 완료: '간편결제가 카드를 대체하는 시대, 자동화 기술로 보는 핀테크 혁신' (1699자)
+2026-03-23 15:14:32,807 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_151432_간편결제가 카드를 대체하는 시대_ 자동화 기술로 보는 .md
+2026-03-23 15:14:32,808 [INFO] agents.writer_agent: [3/3] 작성 중: Seoul's Brand New Tram Line
+2026-03-23 15:14:33,152 [INFO] agents.writer_agent: Writer Agent: 'Seoul's Brand New Tram Line' 작성 시작
+2026-03-23 15:15:02,539 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:02,540 [INFO] agents.writer_agent: 작성 완료: '서울 신규 트램 노선의 스마트 교통 자동화 시스템 - IoT와 AI가 만드는 미래 대중교통' (1313자)
+2026-03-23 15:15:02,542 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_151502_서울 신규 트램 노선의 스마트 교통 자동화 시스템 _ .md
+2026-03-23 15:15:02,542 [INFO] agents.writer_agent: Writer Agent 완료: 3개 포스트 생성
+2026-03-23 15:15:02,542 [INFO] run_agent: 
+[STAGE 3] 품질 검수
+2026-03-23 15:15:02,543 [INFO] agents.reviewer_agent: === Reviewer Agent 시작: 3개 포스트 ===
+2026-03-23 15:15:07,936 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:07,937 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 82/75 | 이슈: 4개
+2026-03-23 15:15:07,938 [INFO] agents.reviewer_agent: '쿠팡 2800만 사용자 복구의 비밀: 이커머스 자동화 기술의 힘' 검수 합격 (시도 1)
+2026-03-23 15:15:15,853 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:15,854 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 82/75 | 이슈: 6개
+2026-03-23 15:15:15,854 [INFO] agents.reviewer_agent: '간편결제가 카드를 대체하는 시대, 자동화 기술로 보는 핀테크 혁신' 검수 합격 (시도 1)
+2026-03-23 15:15:23,600 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:23,600 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 72/75 | 이슈: 6개
+2026-03-23 15:15:23,601 [INFO] agents.reviewer_agent: 재작성 시도 1/2
+2026-03-23 15:15:46,064 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:46,065 [INFO] agents.reviewer_agent: 재작성 완료
+2026-03-23 15:15:54,681 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:15:54,682 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 72/75 | 이슈: 6개
+2026-03-23 15:15:54,683 [INFO] agents.reviewer_agent: 재작성 시도 2/2
+2026-03-23 15:16:25,626 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:16:25,628 [INFO] agents.reviewer_agent: 재작성 완료
+2026-03-23 15:16:32,857 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 15:16:32,858 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 72/75 | 이슈: 5개
+2026-03-23 15:16:32,858 [WARNING] agents.reviewer_agent: 최대 재시도 초과 — '서울 신규 트램 노선의 스마트 교통 자동화 시스템 - IoT와 AI가 만드는 미래 대중교통' 강제 통과
+2026-03-23 15:16:32,858 [INFO] agents.reviewer_agent: 검수 완료: 2/3개 합격
+2026-03-23 15:16:32,858 [INFO] run_agent: 
+[STAGE 4] 발행 → GitHub Pages
+2026-03-23 15:16:32,859 [INFO] agents.github_publisher: === GitHub Pages Publisher 시작 ===
+2026-03-23 15:16:32,860 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-23-쿠팡-2800만-사용자-복구의-비밀-이커머스-자동화-기술의-힘.md (2395자)
+2026-03-23 15:16:33,584 [INFO] agents.github_publisher: GitHub 커밋 시도: ajinnetworks/ajinnetworks.github.io/_posts/2026-03-23-쿠팡-2800만-사용자-복구의-비밀-이커머스-자동화-기술의-힘.md
+2026-03-23 15:16:34,982 [INFO] agents.github_publisher: ✅ 커밋 신규 생성 완료: _posts/2026-03-23-쿠팡-2800만-사용자-복구의-비밀-이커머스-자동화-기술의-힘.md (sha: 16444845)
+2026-03-23 15:16:34,986 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260323_151634_쿠팡_2800만_사용자_복구의_비밀__이커머스_자동화_.json
+2026-03-23 15:16:34,988 [INFO] agents.github_publisher: 마크다운 변환 완료: 2026-03-23-간편결제가-카드를-대체하는-시대-자동화-기술로-보는-핀테크-혁신.md (2464자)
+2026-03-23 15:16:35,650 [INFO] agents.github_publisher: GitHub 커밋 시도: ajinnetworks/ajinnetworks.github.io/_posts/2026-03-23-간편결제가-카드를-대체하는-시대-자동화-기술로-보는-핀테크-혁신.md
+2026-03-23 15:16:36,974 [INFO] agents.github_publisher: ✅ 커밋 신규 생성 완료: _posts/2026-03-23-간편결제가-카드를-대체하는-시대-자동화-기술로-보는-핀테크-혁신.md (sha: 2a734fea)
+2026-03-23 15:16:36,978 [INFO] agents.github_publisher: 발행 기록 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\published\20260323_151636_간편결제가_카드를_대체하는_시대__자동화_기술로_보는_.json
+2026-03-23 15:16:36,978 [WARNING] agents.github_publisher: 검수 미합격 스킵: '서울 신규 트램 노선의 스마트 교통 자동화 시스템 - IoT와 AI가 만드는 미래 대중교통' (점수: 72)
+2026-03-23 15:16:36,978 [INFO] agents.github_publisher: GitHub Pages Publisher 완료: 2/3개 발행
+2026-03-23 15:16:36,979 [INFO] run_agent: 
+============================================================
+2026-03-23 15:16:36,979 [INFO] run_agent:   플랫폼: GitHub Pages
+2026-03-23 15:16:36,980 [INFO] run_agent:   주제: 3개
+2026-03-23 15:16:36,980 [INFO] run_agent:   작성: 3개
+2026-03-23 15:16:36,980 [INFO] run_agent:   합격: 2개
+2026-03-23 15:16:36,980 [INFO] run_agent:   발행: 2개
+2026-03-23 15:16:36,980 [INFO] run_agent:   URL : https://ajinnetworks.github.io
+2026-03-23 15:16:36,980 [INFO] run_agent:   시간: 207.2초
+2026-03-23 15:16:36,981 [INFO] run_agent: ============================================================

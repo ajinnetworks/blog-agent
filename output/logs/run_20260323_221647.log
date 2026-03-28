@@ -1,0 +1,69 @@
+2026-03-23 22:16:47,706 [INFO] run_agent: ============================================================
+2026-03-23 22:16:47,706 [INFO] run_agent: Blog Agent 시작: 2026-03-23 22:16:47
+2026-03-23 22:16:47,706 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: DRY-RUN
+2026-03-23 22:16:47,707 [INFO] run_agent: ============================================================
+2026-03-23 22:16:47,707 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-23 22:16:47,718 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-23 22:16:49,110 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-23 22:16:49,476 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-23 22:16:50,736 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-23 22:16:50,738 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 수집됨
+2026-03-23 22:16:59,900 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:16:59,934 [INFO] agents.trend_agent: Claude가 3개 주제 선정 완료
+2026-03-23 22:16:59,936 [INFO] agents.trend_agent: 트렌드 에이전트 완료 → E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\agents\..\output\logs\trend_20260323_221659.json
+2026-03-23 22:16:59,936 [INFO] run_agent: 선정 주제: ['sk하이닉스', '나스닥 선물', 'Coupang']
+2026-03-23 22:16:59,936 [INFO] run_agent: 
+[STAGE 2] 포스트 작성
+2026-03-23 22:16:59,936 [INFO] agents.writer_agent: === Writer Agent 시작: 3개 주제 ===
+2026-03-23 22:16:59,936 [INFO] agents.writer_agent: [1/3] 작성 중: sk하이닉스
+2026-03-23 22:17:00,275 [INFO] agents.writer_agent: Writer Agent: 'sk하이닉스' 작성 시작
+2026-03-23 22:17:36,872 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:17:36,873 [INFO] agents.writer_agent: 작성 완료: 'SK하이닉스 AI 메모리 반도체 생산의 스마트팩토리 자동화 혁신' (1792자)
+2026-03-23 22:17:36,891 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_221736_SK하이닉스 AI 메모리 반도체 생산의 스마트팩토리 자.md
+2026-03-23 22:17:36,891 [INFO] agents.writer_agent: [2/3] 작성 중: 나스닥 선물
+2026-03-23 22:17:37,222 [INFO] agents.writer_agent: Writer Agent: '나스닥 선물' 작성 시작
+2026-03-23 22:18:06,271 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:18:06,272 [INFO] agents.writer_agent: 작성 완료: '나스닥 선물 자동매매 봇 개발 가이드: 알고리즘 트레이딩 구현 전략' (1418자)
+2026-03-23 22:18:06,276 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_221806_나스닥 선물 자동매매 봇 개발 가이드_ 알고리즘 트레이.md
+2026-03-23 22:18:06,276 [INFO] agents.writer_agent: [3/3] 작성 중: Coupang
+2026-03-23 22:18:06,609 [INFO] agents.writer_agent: Writer Agent: 'Coupang' 작성 시작
+2026-03-23 22:18:36,327 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:18:36,328 [INFO] agents.writer_agent: 작성 완료: '쿠팡 물류 자동화 시스템 분석: AI 기반 배송 최적화 기술의 핵심' (1549자)
+2026-03-23 22:18:36,331 [INFO] agents.writer_agent: 초안 저장: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_221836_쿠팡 물류 자동화 시스템 분석_ AI 기반 배송 최적화.md
+2026-03-23 22:18:36,331 [INFO] agents.writer_agent: Writer Agent 완료: 3개 포스트 생성
+2026-03-23 22:18:36,331 [INFO] run_agent: 
+[STAGE 3] 품질 검수
+2026-03-23 22:18:36,331 [INFO] agents.reviewer_agent: === Reviewer Agent 시작: 3개 포스트 ===
+2026-03-23 22:18:44,795 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:18:44,809 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 78/75 | 이슈: 5개
+2026-03-23 22:18:44,809 [INFO] agents.reviewer_agent: 'SK하이닉스 AI 메모리 반도체 생산의 스마트팩토리 자동화 혁신' 검수 합격 (시도 1)
+2026-03-23 22:18:52,230 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:18:52,231 [INFO] agents.reviewer_agent: 검수 결과: ✅ 합격 | 점수: 82/75 | 이슈: 5개
+2026-03-23 22:18:52,231 [INFO] agents.reviewer_agent: '나스닥 선물 자동매매 봇 개발 가이드: 알고리즘 트레이딩 구현 전략' 검수 합격 (시도 1)
+2026-03-23 22:19:00,341 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:19:00,342 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 72/75 | 이슈: 5개
+2026-03-23 22:19:00,342 [INFO] agents.reviewer_agent: 재작성 시도 1/2
+2026-03-23 22:19:21,559 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:19:21,559 [INFO] agents.reviewer_agent: 재작성 완료
+2026-03-23 22:19:30,414 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:19:30,415 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 72/75 | 이슈: 6개
+2026-03-23 22:19:30,415 [INFO] agents.reviewer_agent: 재작성 시도 2/2
+2026-03-23 22:20:14,947 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:20:14,949 [ERROR] agents.reviewer_agent: 재작성 결과 파싱 실패 — 원본 유지
+2026-03-23 22:20:22,808 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-03-23 22:20:22,809 [INFO] agents.reviewer_agent: 검수 결과: ❌ 불합격 | 점수: 62/75 | 이슈: 7개
+2026-03-23 22:20:22,810 [WARNING] agents.reviewer_agent: 최대 재시도 초과 — '쿠팡 물류 자동화 시스템 분석: AI 기반 배송 최적화 기술의 핵심' 강제 통과
+2026-03-23 22:20:22,810 [INFO] agents.reviewer_agent: 검수 완료: 2/3개 합격
+2026-03-23 22:20:22,810 [INFO] run_agent: 
+[STAGE 4] DRY-RUN — 발행 스킵
+2026-03-23 22:20:22,810 [INFO] run_agent:   초안: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_221736_SK하이닉스 AI 메모리 반도체 생산의 스마트팩토리 자.md
+2026-03-23 22:20:22,810 [INFO] run_agent:   초안: E:\아진네트웍스\Claude Code\블로그 제작\blog_agent\output\drafts\20260323_221806_나스닥 선물 자동매매 봇 개발 가이드_ 알고리즘 트레이.md
+2026-03-23 22:20:22,813 [INFO] run_agent: 
+============================================================
+2026-03-23 22:20:22,813 [INFO] run_agent:   플랫폼: GitHub Pages
+2026-03-23 22:20:22,813 [INFO] run_agent:   주제: 3개
+2026-03-23 22:20:22,813 [INFO] run_agent:   작성: 3개
+2026-03-23 22:20:22,814 [INFO] run_agent:   합격: 2개
+2026-03-23 22:20:22,814 [INFO] run_agent:   시간: 215.1초
+2026-03-23 22:20:22,814 [INFO] run_agent: ============================================================

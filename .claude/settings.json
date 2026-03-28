@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Read(//c/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/src/**)",
+      "Read(//c/Users/user-0516/Desktop/내부 전용 AI 견적 플랫폼/ajin_local_v6/ajin_local_v6 \\(최종\\)/ajin-local/**)",
+      "Bash(python test_github.py)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://api.github.com/repos/ajinnetworks/ajinnetworks.github.io)",
+      "Bash(python -c \":*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\user-0516\\Desktop\\내부 전용 AI 견적 플랫폼\\ajin_local_v6\\ajin_local_v6 (최종)\\ajin-local\\src",
+      "c:\\Users\\user-0516\\Desktop\\내부 전용 AI 견적 플랫폼\\ajin_local_v6\\ajin_local_v6 (최종)\\ajin-local"
+    ]
+  }
+}

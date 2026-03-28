@@ -1,0 +1,105 @@
+---
+layout: default
+---
+
+<article class="post-wrap">
+
+  <!-- 포스트 헤더 -->
+  <header class="post-hero">
+    <div class="post-hero-inner">
+      {% if page.categories %}
+        <div class="post-cats">
+          {% for cat in page.categories %}
+            <span class="post-cat-badge">{{ cat }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <h1 class="post-big-title">{{ page.title }}</h1>
+      <div class="post-byline">
+        <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
+        <span>✍️ 아진네트웍스 주식회사</span>
+        {% if page.tags %}
+          <span>🏷️ {{ page.tags | join: ", " }}</span>
+        {% endif %}
+      </div>
+      {% if page.description %}
+        <p class="post-lead">{{ page.description }}</p>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- 포스트 본문 -->
+  <div class="post-body-wrap">
+
+    <!-- 목차 -->
+    <div class="toc-box">
+      <h4>📋 목차</h4>
+      <ul class="toc-list"></ul>
+    </div>
+
+    <div class="post-body">
+      {{ content }}
+    </div>
+
+    <!-- 태그 섹션 -->
+    {% if page.tags %}
+      <div class="post-tags-section">
+        <strong>태그:</strong>
+        {% for tag in page.tags %}
+          <span class="post-tag-item">#{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- 회사 CTA -->
+    <div class="post-cta">
+      <div class="cta-inner">
+        <h3>⚙️ 아진네트웍스 주식회사</h3>
+        <p>공장 자동화 · 딥러닝 비전 검사 · 스마트팩토리 전문 기업</p>
+        <a href="https://www.ajinnetworks.co.kr" target="_blank" class="cta-btn">회사 홈페이지 방문 →</a>
+      </div>
+    </div>
+
+    <!-- 공유 버튼 -->
+    <div class="share-section">
+      <h4>이 글이 도움이 되셨나요? 공유해주세요</h4>
+      <div>
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ page.url | absolute_url | uri_escape }}&title={{ page.title | uri_escape }}"
+           target="_blank" rel="noopener" class="share-btn share-linkedin">💼 LinkedIn</a>
+        <button onclick="copyURL()" class="share-btn share-copy">🔗 URL 복사</button>
+      </div>
+    </div>
+
+    <!-- 관련 포스트 -->
+    {% assign all_related = site.posts | where_exp: "p", "p.url != page.url" %}
+    {% assign cat_related = "" | split: "" %}
+    {% for p in all_related %}
+      {% for cat in p.categories %}
+        {% if page.categories contains cat %}
+          {% assign cat_related = cat_related | push: p %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    {% if cat_related.size > 0 %}
+    <div class="related-posts">
+      <h4>📌 관련 포스트</h4>
+      <div class="related-grid">
+        {% for p in cat_related limit: 3 %}
+        <a href="{{ p.url | relative_url }}" class="related-item">
+          {% if p.categories %}<div class="related-item-cat">{{ p.categories | first }}</div>{% endif %}
+          <div class="related-item-title">{{ p.title }}</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px;">{{ p.date | date: "%Y.%m.%d" }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 목록으로 돌아가기 -->
+    <div class="post-nav">
+      <a href="{{ '/' | relative_url }}" class="back-btn">← 목록으로 돌아가기</a>
+    </div>
+  </div>
+
+</article>

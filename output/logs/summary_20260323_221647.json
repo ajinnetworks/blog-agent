@@ -1,0 +1,32 @@
+{
+  "run_at": "2026-03-23T22:16:47.706358",
+  "platform": "github",
+  "dry_run": true,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "sk하이닉스",
+        "나스닥 선물",
+        "Coupang"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 2,
+      "scores": [
+        78,
+        82,
+        62
+      ]
+    },
+    "publisher": {
+      "skipped": true
+    }
+  },
+  "elapsed_seconds": 215.1
+}

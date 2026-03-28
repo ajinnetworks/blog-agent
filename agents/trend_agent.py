@@ -13,6 +13,13 @@ import google.generativeai as genai
 import requests
 import yaml
 
+# 모델 우선순위 (한도 초과 시 자동 전환)
+GEMINI_MODELS = [
+    "gemini-1.5-flash",     # 1순위
+    "gemini-2.0-flash",     # 2순위
+    "gemini-1.5-flash-8b",  # 3순위 (경량)
+]
+
 import io
 import sys
 if sys.stdout.encoding != 'utf-8':
@@ -28,6 +35,23 @@ if sys.stderr.encoding != 'utf-8':
 from agents.writer_agent import is_valid_topic, EXCLUDE_KEYWORDS
 
 logger = logging.getLogger(__name__)
+
+
+def get_gemini_response(prompt: str) -> str:
+    """GEMINI_MODELS 순서대로 시도, 429 시 다음 모델로 전환."""
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    for model_name in GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            logger.info(f"[MODEL] {model_name} 사용")
+            return response.text.strip()
+        except Exception as e:
+            if "429" in str(e) or "quota" in str(e).lower() or "ResourceExhausted" in type(e).__name__:
+                logger.warning(f"[WARN] {model_name} 한도 초과 -> 다음 모델 시도")
+                continue
+            raise
+    raise RuntimeError("모든 Gemini 모델 한도 초과")
 
 
 def load_config() -> dict:
@@ -144,14 +168,17 @@ def select_topics_via_gemini(
 }}
 """
 
-    model = genai.GenerativeModel(model_name="gemini-flash-latest")
-    response = model.generate_content(prompt)
-    raw = response.text.strip()
+    raw = get_gemini_response(prompt)
     # JSON 펜스 제거
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
+    if "```" in raw:
+        parts = raw.split("```")
+        for part in parts:
+            part = part.strip()
+            if part.startswith("json"):
+                part = part[4:].strip()
+            if part.startswith("{"):
+                raw = part
+                break
     result = json.loads(raw.strip())
     logger.info(f"Gemini가 {len(result['selected_topics'])}개 주제 선정 완료")
     return result["selected_topics"]

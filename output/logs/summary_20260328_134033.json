@@ -1,0 +1,37 @@
+{
+  "run_at": "2026-03-28T13:40:33.542694",
+  "platform": "github",
+  "dry_run": true,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "에너지 가격 상승과 스마트팩토리 FEMS",
+        "경제 성장률 하향과 제조업 디지털 전환",
+        "롯데리아와 푸드테크 스마트팩토리"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 3,
+      "scores": [
+        91,
+        83,
+        84
+      ]
+    },
+    "publisher": {
+      "platform": "github_pages",
+      "dry_run": true,
+      "published": 3,
+      "failed": 0,
+      "commit_urls": [],
+      "blog_url": null
+    }
+  },
+  "elapsed_seconds": 146.4
+}

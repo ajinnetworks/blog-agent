@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-23T22:31:12.833385",
+  "raw_count": 30,
+  "selected": [
+    {
+      "keyword": "sk하이닉스",
+      "angle": "SK하이닉스의 AI 반도체 자동화 생산 기술과 스마트팩토리 혁신 사례 분석",
+      "reason": "반도체 기업의 자동화 기술은 기술/자동화 도메인과 직접적 연관성이 높고 투자 관심으로 검색량이 많음",
+      "estimated_search_volume": "high"
+    },
+    {
+      "keyword": "Coupang's User Base Recovers",
+      "angle": "쿠팡의 물류 자동화 시스템과 AI 기반 배송 최적화 기술이 사용자 증가에 미친 영향",
+      "reason": "쿠팡의 물류 자동화 기술은 실제 비즈니스 성과와 연결되어 높은 관심도를 가짐",
+      "estimated_search_volume": "medium"
+    },
+    {
+      "keyword": "Easy Payments Supplant Cards",
+      "angle": "간편결제 시스템의 자동화 기술과 핀테크 결제 프로세스 혁신 동향",
+      "reason": "결제 자동화 기술은 일상생활과 밀접하여 지속적인 검색 수요가 있음",
+      "estimated_search_volume": "medium"
+    }
+  ]
+}

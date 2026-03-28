@@ -1,0 +1,12 @@
+2026-03-23 05:19:41,728 [INFO] run_agent: ============================================================
+2026-03-23 05:19:41,728 [INFO] run_agent: Blog Agent 시작: 2026-03-23 05:19:41
+2026-03-23 05:19:41,728 [INFO] run_agent: 플랫폼: GitHub Pages | 모드: DRY-RUN
+2026-03-23 05:19:41,728 [INFO] run_agent: ============================================================
+2026-03-23 05:19:41,729 [INFO] run_agent: 
+[STAGE 1] 트렌드 수집 & 주제 선정
+2026-03-23 05:19:41,731 [INFO] agents.trend_agent: === Trend Agent 시작 ===
+2026-03-23 05:19:42,978 [INFO] agents.trend_agent: Google Trends: 10개 키워드 수집
+2026-03-23 05:19:43,372 [WARNING] agents.trend_agent: Naver Trends 수집 실패 (무시하고 계속): 404 Client Error: Not Found for url: https://www.naver.com/rss/trending
+2026-03-23 05:19:44,646 [INFO] agents.trend_agent: Reddit KR: 20개 키워드 수집
+2026-03-23 05:19:44,648 [INFO] agents.trend_agent: 총 30개 트렌드 키워드 수집됨
+2026-03-23 05:19:45,582 [INFO] httpx: HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 401 Unauthorized"

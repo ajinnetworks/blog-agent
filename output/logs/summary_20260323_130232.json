@@ -1,0 +1,32 @@
+{
+  "run_at": "2026-03-23T13:02:32.072411",
+  "platform": "github",
+  "dry_run": true,
+  "stages": {
+    "trend": {
+      "count": 3,
+      "topics": [
+        "달러 환율",
+        "Coupang's User Base Recovers",
+        "Easy Payments Supplant Cards"
+      ]
+    },
+    "writer": {
+      "attempted": 3,
+      "succeeded": 3
+    },
+    "reviewer": {
+      "total": 3,
+      "passed": 2,
+      "scores": [
+        68,
+        82,
+        88
+      ]
+    },
+    "publisher": {
+      "skipped": true
+    }
+  },
+  "elapsed_seconds": 263.9
+}
