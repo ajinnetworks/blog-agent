@@ -23,6 +23,11 @@ jobs:
   auto-post:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ secrets.BLOG_GITHUB_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
 
     steps:
       - name: 코드 체크아웃
@@ -43,13 +48,13 @@ jobs:
           cat > .env << EOF
           ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
           BLOG_GITHUB_TOKEN=${{ secrets.BLOG_GITHUB_TOKEN }}
-          GITHUB_REPO=ajinnetworks/ajinnetworks.github.io
-          GITHUB_BRANCH=main
-          GITHUB_POSTS_PATH=_posts
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          BLOG_REPO=ajinnetworks/ajinnetworks.github.io
           HUMAN_GATE=false
           LOG_LEVEL=INFO
+          PYTHONUTF8=1
+          PYTHONIOENCODING=utf-8
           EOF
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
 
       - name: 블로그 포스트 자동 생성 및 발행
         run: |
