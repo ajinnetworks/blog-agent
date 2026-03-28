@@ -39,22 +39,3 @@
   </div>
 </header>
 
-<script>
-function toggleMobileMenu() {
-  var nav = document.querySelector('.nav-links');
-  var btn = document.querySelector('.nav-hamburger');
-  var isOpen = nav.classList.toggle('open');
-  btn.textContent = isOpen ? '×' : '☰';
-}
-
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.site-header')) {
-    var nav = document.querySelector('.nav-links');
-    var btn = document.querySelector('.nav-hamburger');
-    if (nav && nav.classList.contains('open')) {
-      nav.classList.remove('open');
-      btn.textContent = '☰';
-    }
-  }
-});
-</script>
