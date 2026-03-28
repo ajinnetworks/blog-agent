@@ -31,3 +31,5 @@ Thumbs.db
 # 로그
 *.log
 config/evn.env
+config/*.env
+**/*.env
