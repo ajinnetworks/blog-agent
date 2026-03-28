@@ -8,12 +8,23 @@ agent:
   temperature: 0.7
 
 blog:
-  platform: "tistory"          # tistory | wordpress | naver
+  platform: github_pages
   posts_per_week: 3
   schedule_days: ["tuesday", "thursday", "saturday"]
   schedule_time: "09:00"
-  default_category: "기술/자동화"
+  default_category: 스마트팩토리
   language: "ko"
+  categories:
+    - 포장자동화
+    - 자동차자동화
+    - 반도체자동화
+    - 디스플레이자동화
+    - 물류자동화
+    - 로봇자동화
+    - 부품정보
+    - PLC제어
+    - 비전검사
+    - 스마트팩토리
 
 trend:
   sources:
