@@ -25,7 +25,9 @@
       "Bash(find 'e:/아진네트웍스/Claude Code/블로그 제작/blog_agent' -name *.png -o -name *.jpg -o -name *.svg)",
       "Read(//e/아진네트웍스/Claude Code/블로그 제작/**)",
       "Bash(gh run:*)",
-      "Bash(where gh:*)"
+      "Bash(where gh:*)",
+      "Bash(sed -i 's/- \"\"gemini-2.0-flash\"\"/- \"\"gemini-2.0-flash-lite\"\"/' config/settings.yaml)",
+      "Bash(sed -i 's/- \"\"gemini-1.5-flash-8b\"\"/- \"\"gemini-flash-latest\"\"/' config/settings.yaml)"
     ]
   }
 }
