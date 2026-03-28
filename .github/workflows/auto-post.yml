@@ -24,10 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      GITHUB_TOKEN: ${{ secrets.BLOG_GITHUB_TOKEN }}
+      BLOG_GITHUB_TOKEN: ${{ secrets.BLOG_GITHUB_TOKEN }}
+      BLOG_REPO: ajinnetworks/ajinnetworks.github.io
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
+      LOG_LEVEL: "INFO"
 
     steps:
       - name: 코드 체크아웃
