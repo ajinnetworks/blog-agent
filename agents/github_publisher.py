@@ -40,22 +40,29 @@ KST = ZoneInfo("Asia/Seoul")
 
 # ─── 설정 로드 ────────────────────────────────────────────────────────────────
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+# 로컬: GITHUB_TOKEN / Actions: BLOG_GITHUB_TOKEN 통합
+GITHUB_TOKEN = (
+    os.getenv("BLOG_GITHUB_TOKEN") or
+    os.getenv("GITHUB_TOKEN")
+)
+
+if not GITHUB_TOKEN:
+    raise ValueError("GitHub 토큰 없음: BLOG_GITHUB_TOKEN 또는 GITHUB_TOKEN 필요")
+
+
 def get_github_config() -> dict:
     """환경변수에서 GitHub 설정 읽기."""
-    token = os.environ.get("GITHUB_TOKEN")
+    token = GITHUB_TOKEN
     repo_name = os.environ.get("GITHUB_REPO")          # 예: "username/username.github.io"
     branch = os.environ.get("GITHUB_BRANCH", "main")
     posts_path = os.environ.get("GITHUB_POSTS_PATH", "_posts")
 
-    missing = []
-    if not token:
-        missing.append("GITHUB_TOKEN")
     if not repo_name:
-        missing.append("GITHUB_REPO")
-
-    if missing:
         raise EnvironmentError(
-            f"필수 환경변수 미설정: {missing}\n"
+            "필수 환경변수 미설정: GITHUB_REPO\n"
             "config/.env.sample 참고 후 .env에 추가하세요."
         )
 
@@ -477,8 +484,6 @@ if __name__ == "__main__":
 
     print("GitHub Pages Publisher - 환경변수 확인")
     try:
-        from dotenv import load_dotenv
-        load_dotenv(ROOT / ".env", override=True)
         cfg = get_github_config()
         print(f"  repo     : {cfg['repo_name']}")
         print(f"  branch   : {cfg['branch']}")
