@@ -36,20 +36,25 @@ GEMINI_MODELS = [
 
 
 def get_gemini_response(prompt: str) -> str:
-    """GEMINI_MODELS 순서대로 시도, 429 시 다음 모델로 전환."""
+    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
+    import time
     client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    for model_name in GEMINI_MODELS:
-        try:
-            response = client.models.generate_content(model=model_name, contents=prompt)
-            logger.info(f"[MODEL] {model_name} 사용")
-            return response.text.strip()
-        except Exception as e:
-            err = str(e)
-            if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
-                logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
-                continue
-            raise
-    raise RuntimeError("모든 Gemini 모델 한도 초과")
+    for retry in range(2):
+        for model_name in GEMINI_MODELS:
+            try:
+                response = client.models.generate_content(model=model_name, contents=prompt)
+                logger.info(f"[MODEL] {model_name} 사용")
+                return response.text.strip()
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
+                    logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
+                    continue
+                raise
+        if retry == 0:
+            logger.warning("[RATE LIMIT] 모든 모델 한도 초과 → 65초 대기 후 재시도")
+            time.sleep(65)
+    raise RuntimeError("429 모든 Gemini 모델 한도 초과 (재시도 후)")
 
 BLOG_CATEGORIES = [
     {
@@ -309,6 +314,7 @@ image: /assets/img/og-default.png
 
 
 def run_writer_agent(topics: list[dict]) -> list[dict]:
+    import time
     logger.info(f"=== Writer Agent 시작: {len(topics)}개 주제 ===")
     posts = []
 
@@ -316,6 +322,9 @@ def run_writer_agent(topics: list[dict]) -> list[dict]:
         if not is_valid_topic(topic.get("keyword", "")):
             logger.warning(f"[{i}/{len(topics)}] 제외 키워드 포함 — 스킵: {topic['keyword']}")
             continue
+        if i > 1:
+            logger.info("[RPM 보호] 5초 대기 중...")
+            time.sleep(5)
         logger.info(f"[{i}/{len(topics)}] 작성 중: {topic['keyword']}")
         try:
             post = generate_post(topic)
