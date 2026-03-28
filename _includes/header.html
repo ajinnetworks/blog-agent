@@ -2,10 +2,13 @@
   <div class="wrapper">
     <!-- 좌측: 로고 -->
     <a href="{{ '/' | relative_url }}" class="nav-logo">
-      <img src="{{ '/assets/images/ajin_logo.png' | relative_url }}"
-           alt="아진네트웍스"
-           loading="lazy"
-           onerror="this.style.display='none'">
+      <picture>
+        <source srcset="{{ '/assets/images/ajin_logo.webp' | relative_url }}" type="image/webp">
+        <img src="{{ '/assets/images/ajin_logo.png' | relative_url }}"
+             alt="아진네트웍스(주)"
+             loading="lazy"
+             width="40" height="40">
+      </picture>
       <span class="nav-logo-text">아진네트웍스(주)</span>
     </a>
 

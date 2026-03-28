@@ -2,8 +2,9 @@ const CACHE_NAME = 'ajin-blog-' + new Date().toISOString().slice(0,10).replace(/
 const STATIC_ASSETS = [
   '/',
   '/assets/css/style.css',
-  '/assets/images/ajin_logo.png',
-  '/assets/images/ajin_logo_footer_white.png',
+  '/assets/images/ajin_logo.webp',
+  '/assets/images/ajin_logo_footer_white.webp',
+  '/assets/images/icon-192x192.png',
   '/manifest.json'
 ];
 

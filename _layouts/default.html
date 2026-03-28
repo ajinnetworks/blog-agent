@@ -22,10 +22,13 @@
       <div class="wrapper">
         <div class="footer-company">
   <div class="footer-logo" style="text-align:center;margin-bottom:15px;">
-    <img src="{{ '/assets/images/ajin_logo_footer_white.png' | relative_url }}"
-         alt="아진네트웍스(주) 로고"
-         loading="lazy"
-         style="height: 70px; width: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;">
+    <picture>
+      <source srcset="{{ '/assets/images/ajin_logo_footer_white.webp' | relative_url }}" type="image/webp">
+      <img src="{{ '/assets/images/ajin_logo_footer_white.png' | relative_url }}"
+           alt="아진네트웍스(주) 로고"
+           loading="lazy"
+           width="389" height="70">
+    </picture>
   </div>
   <p class="footer-company-name">아진네트웍스 주식회사 | AJIN NETWORKS Co., Ltd.</p>
           <div class="footer-info-grid">
