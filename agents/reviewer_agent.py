@@ -81,7 +81,7 @@ def get_gemini_response(prompt: str) -> str:
                 return response.text.strip()
             except Exception as e:
                 err = str(e)
-                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
+                if "429" in err or "503" in err or "quota" in err.lower() or "UNAVAILABLE" in err or "ResourceExhausted" in type(e).__name__ or "ServerError" in type(e).__name__ or "404" in err:
                     logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
                     continue
                 raise
