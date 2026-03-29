@@ -36,6 +36,64 @@ from agents.writer_agent import is_valid_topic, EXCLUDE_KEYWORDS
 
 logger = logging.getLogger(__name__)
 
+# ── 카테고리 가중치 (주제 선정 시 우선순위) ──────────────────────────
+CATEGORY_WEIGHTS = {
+    "물류자동화":   0.35,   # 최우선 — AGV/AMR/컨베이어/소터
+    "딥러닝비전":   0.30,   # 최우선 — 비전검사/불량검출/머신비전
+    "공장자동화":   0.15,
+    "스마트팩토리": 0.12,
+    "제어SW":      0.08,
+}
+
+CATEGORY_KEYWORDS = {
+    "물류자동화": [
+        "AGV", "AMR", "컨베이어", "소터", "WMS", "물류자동화",
+        "자동창고", "피킹", "팔레타이징", "물류로봇", "배송자동화"
+    ],
+    "딥러닝비전": [
+        "딥러닝 비전", "머신비전", "비전검사", "불량검출",
+        "AI 검사", "이미지 인식", "결함검출", "OCR", "3D비전",
+        "딥러닝 불량", "비전 자동화"
+    ],
+    "공장자동화": [
+        "공장자동화", "로봇자동화", "CNC", "픽앤플레이스",
+        "포장자동화", "용접자동화", "조립자동화"
+    ],
+    "스마트팩토리": [
+        "스마트팩토리", "MES", "디지털트윈", "OEE",
+        "예지보전", "IoT", "엣지AI"
+    ],
+    "제어SW": [
+        "PLC", "SCADA", "HMI", "Siemens", "Mitsubishi",
+        "LS산전", "필드버스", "모션제어"
+    ],
+}
+
+# 화/목/토 스케줄 순환
+SCHEDULE_ROTATION = [
+    "물류자동화",   # 화요일
+    "딥러닝비전",   # 목요일
+    "공장자동화",   # 토요일
+]
+
+
+def get_weighted_category() -> str:
+    """가중치 기반으로 카테고리 랜덤 선택."""
+    import random
+    categories = list(CATEGORY_WEIGHTS.keys())
+    weights = list(CATEGORY_WEIGHTS.values())
+    return random.choices(categories, weights=weights, k=1)[0]
+
+
+def get_schedule_category() -> str:
+    """오늘 요일에 맞는 스케줄 카테고리 반환 (화=0, 목=1, 토=2, 그 외=가중치)."""
+    weekday = datetime.now().weekday()  # 0=월 … 6=일
+    rotation_map = {1: 0, 3: 1, 5: 2}  # 화=1, 목=3, 토=5
+    idx = rotation_map.get(weekday)
+    if idx is not None:
+        return SCHEDULE_ROTATION[idx]
+    return get_weighted_category()
+
 
 def get_gemini_response(prompt: str) -> str:
     """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
@@ -148,15 +206,29 @@ def select_topics_via_gemini(
         [f"- [{t['source']}] {t['keyword']}" for t in raw_trends[:50]]
     )
 
+    priority_cat = get_schedule_category()
+    cat_kw_text = "\n".join(
+        f"  {cat}({int(w*100)}%): {', '.join(CATEGORY_KEYWORDS[cat][:5])}"
+        for cat, w in CATEGORY_WEIGHTS.items()
+    )
+
     prompt = f"""
-당신은 블로그 주제 선정 전문가입니다.
+당신은 공장자동화·물류자동화·딥러닝비전 전문 블로그의 주제 선정 전문가입니다.
 
 블로그 도메인: {blog_domain}
+오늘 우선 카테고리: {priority_cat}
+
+카테고리 우선순위 및 핵심 키워드:
+{cat_kw_text}
+
 현재 트렌드 목록:
 {trends_text}
 
-위 트렌드 중에서 블로그 도메인과 연관성이 높고,
-검색 유입이 기대되는 주제를 {top_n}개 선정하세요.
+규칙:
+1. 선정 주제 {top_n}개 중 최소 2개는 우선 카테고리({priority_cat}) 또는
+   물류자동화/딥러닝비전에 연결 가능한 주제여야 함
+2. 트렌드 키워드를 제조·자동화 관점으로 재해석해 연결할 것
+3. 금융/식품/소비재/패션 주제는 절대 선정 금지
 
 출력은 반드시 아래 JSON 형식만 반환하세요. 설명 없이 JSON만 출력:
 {{
@@ -165,6 +237,7 @@ def select_topics_via_gemini(
       "keyword": "선정 키워드",
       "angle": "포스트 접근 각도 (한 문장)",
       "reason": "선정 이유 (한 문장)",
+      "category": "물류자동화|딥러닝비전|공장자동화|스마트팩토리|제어SW",
       "estimated_search_volume": "high|medium|low"
     }}
   ]
