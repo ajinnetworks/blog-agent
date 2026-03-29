@@ -290,7 +290,7 @@ def save_draft(post: dict) -> str:
 
     md_path = draft_dir / f"{base_name}.md"
     md_content = f"""---
-title: {post.get("title", "")}
+title: {post.get("title", "") or post.get("description", "")[:40]}
 meta_description: {post.get("meta_description", "")}
 tags: {post.get("tags", [])}
 category: {post.get("category", "")}
