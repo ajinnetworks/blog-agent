@@ -1,0 +1,16 @@
+﻿{% assign cat = page.categories | first %}
+{% assign og_img = page.og_image | default: '/assets/images/og-default.png' %}
+<meta property="og:type"        content="article" />
+<meta property="og:title"       content="{{ page.title | escape }}" />
+<meta property="og:description" content="{{ page.description | default: page.excerpt | strip_html | truncate: 160 | escape }}" />
+<meta property="og:url"         content="{{ page.url | absolute_url }}" />
+<meta property="og:image"       content="{{ og_img | absolute_url }}" />
+<meta property="og:site_name"   content="아진네트웍스 기술블로그" />
+<meta property="og:locale"      content="ko_KR" />
+<meta property="article:published_time" content="{{ page.date | date_to_xmlschema }}" />
+<meta property="article:section"        content="{{ cat }}" />
+{% for tag in page.tags %}<meta property="article:tag" content="{{ tag }}" />{% endfor %}
+<meta name="twitter:card"        content="summary_large_image" />
+<meta name="twitter:title"       content="{{ page.title | escape }}" />
+<meta name="twitter:description" content="{{ page.description | default: page.excerpt | strip_html | truncate: 160 | escape }}" />
+<meta name="twitter:image"       content="{{ og_img | absolute_url }}" />
