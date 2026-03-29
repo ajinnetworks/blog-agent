@@ -2,175 +2,351 @@
 layout: default
 ---
 
-<article class="post-wrap">
+<!-- =============================================
+     Article Schema JSON-LD (자동 생성)
+     ============================================= -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ page.title | escape }}",
+  "description": "{{ page.description | default: page.excerpt | strip_html | truncate: 160 | escape }}",
+  "datePublished": "{{ page.date | date_to_xmlschema }}",
+  "dateModified": "{{ page.last_modified_at | default: page.date | date_to_xmlschema }}",
+  "author": {
+    "@type": "Organization",
+    "name": "아진네트웍스",
+    "url": "https://ajinnetworks.github.io"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "아진네트웍스 주식회사",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ '/assets/images/logo.png' | absolute_url }}"
+    }
+  },
+  "image": "{{ page.og_image | default: '/assets/images/og-default.png' | absolute_url }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ page.url | absolute_url }}"
+  },
+  "keywords": "{{ page.tags | join: ', ' }}",
+  "articleSection": "{{ page.categories | first }}"
+}
+</script>
 
-  <!-- 포스트 헤더 -->
-  <header class="post-hero">
-    <div class="post-hero-inner">
-      {% if page.categories %}
-        <div class="post-cats">
-          {% for cat in page.categories %}
-            <span class="post-cat-badge">{{ cat }}</span>
-          {% endfor %}
-        </div>
-      {% endif %}
-      <h1 class="post-big-title">{{ page.title }}</h1>
-      <div class="post-byline">
-        <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
-        <span>✍️ 아진네트웍스 주식회사</span>
-        {% if page.tags %}
-          <span>🏷️ {{ page.tags | join: ", " }}</span>
-        {% endif %}
-      </div>
-      {% if page.description %}
-        <p class="post-lead">{{ page.description }}</p>
-      {% endif %}
+<!-- =============================================
+     카테고리별 히어로 배너 (메인 타이틀 + 배경)
+     ============================================= -->
+{% assign cat = page.categories | first %}
+
+{% case cat %}
+  {% when '물류자동화' %}
+    {% assign hero_bg    = '#0a1628' %}
+    {% assign hero_accent= '#00d4ff' %}
+    {% assign hero_icon  = '📦' %}
+    {% assign hero_sub   = 'Logistics Automation' %}
+    {% assign hero_pattern = 'logistics' %}
+  {% when '공장자동화' %}
+    {% assign hero_bg    = '#0d1f0d' %}
+    {% assign hero_accent= '#00ff88' %}
+    {% assign hero_icon  = '🏭' %}
+    {% assign hero_sub   = 'Factory Automation' %}
+    {% assign hero_pattern = 'factory' %}
+  {% when '딥러닝비전' %}
+    {% assign hero_bg    = '#1a0a2e' %}
+    {% assign hero_accent= '#bf00ff' %}
+    {% assign hero_icon  = '🤖' %}
+    {% assign hero_sub   = 'Deep Learning Vision' %}
+    {% assign hero_pattern = 'vision' %}
+  {% when '스마트팩토리' %}
+    {% assign hero_bg    = '#1a1200' %}
+    {% assign hero_accent= '#ffb300' %}
+    {% assign hero_icon  = '⚡' %}
+    {% assign hero_sub   = 'Smart Factory' %}
+    {% assign hero_pattern = 'smart' %}
+  {% when '제어SW' %}
+    {% assign hero_bg    = '#0a0a1e' %}
+    {% assign hero_accent= '#4488ff' %}
+    {% assign hero_icon  = '💻' %}
+    {% assign hero_sub   = 'Control Software' %}
+    {% assign hero_pattern = 'control' %}
+  {% else %}
+    {% assign hero_bg    = '#111111' %}
+    {% assign hero_accent= '#ffffff' %}
+    {% assign hero_icon  = '📄' %}
+    {% assign hero_sub   = 'Ajin Networks' %}
+    {% assign hero_pattern = 'default' %}
+{% endcase %}
+
+<style>
+  :root {
+    --hero-bg:     {{ hero_bg }};
+    --hero-accent: {{ hero_accent }};
+  }
+
+  /* ── 히어로 배너 ── */
+  .post-hero {
+    position: relative;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px 48px;
+    background: var(--hero-bg);
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  /* 배경 그리드 패턴 */
+  .post-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--hero-accent)18 1px, transparent 1px),
+      linear-gradient(90deg, var(--hero-accent)18 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridMove 20s linear infinite;
+  }
+
+  /* 글로우 오브 */
+  .post-hero::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--hero-accent)22 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  @keyframes gridMove {
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: 40px 40px, 40px 40px; }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* 카테고리 배지 */
+  .hero-category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--hero-accent)22;
+    border: 1px solid var(--hero-accent)66;
+    color: var(--hero-accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-icon { font-size: 1.1rem; }
+
+  /* 메인 타이틀 */
+  .hero-title {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin: 0 0 16px;
+    text-shadow: 0 0 40px var(--hero-accent)44;
+    max-width: 760px;
+  }
+
+  /* 날짜 + 읽기시간 */
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.82rem;
+  }
+
+  .hero-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* ── 카테고리 탭 네비게이션 ── */
+  .category-nav {
+    background: #0e0e0e;
+    border-bottom: 1px solid #222;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .category-nav::-webkit-scrollbar { display: none; }
+
+  .category-nav-inner {
+    display: flex;
+    align-items: stretch;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .cat-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 14px 20px;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.83rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color .2s, border-color .2s;
+  }
+
+  .cat-tab:hover { color: rgba(255,255,255,0.85); }
+
+  /* 활성 탭 — 카테고리별 색상 */
+  .cat-tab[data-cat="물류자동화"].active  { color:#00d4ff; border-color:#00d4ff; }
+  .cat-tab[data-cat="공장자동화"].active  { color:#00ff88; border-color:#00ff88; }
+  .cat-tab[data-cat="딥러닝비전"].active  { color:#bf00ff; border-color:#bf00ff; }
+  .cat-tab[data-cat="스마트팩토리"].active{ color:#ffb300; border-color:#ffb300; }
+  .cat-tab[data-cat="제어SW"].active      { color:#4488ff; border-color:#4488ff; }
+
+  /* ── 본문 래퍼 ── */
+  .post-body-wrap {
+    max-width: 780px;
+    margin: 48px auto;
+    padding: 0 24px;
+    color: #e0e0e0;
+    line-height: 1.85;
+    font-size: 1.02rem;
+  }
+
+  .post-body-wrap h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 2.5em 0 0.8em;
+    padding-left: 14px;
+    border-left: 3px solid var(--hero-accent);
+  }
+
+  .post-body-wrap h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #ccc;
+    margin: 1.8em 0 0.5em;
+  }
+
+  .post-body-wrap code {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.88em;
+    color: var(--hero-accent);
+  }
+
+  .post-body-wrap pre {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  .post-body-wrap pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e0e0e0;
+  }
+
+  /* ── 태그 ── */
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid #222;
+  }
+
+  .post-tag {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #aaa;
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: border-color .2s, color .2s;
+  }
+
+  .post-tag:hover { border-color: var(--hero-accent); color: var(--hero-accent); }
+</style>
+
+<!-- 카테고리 탭 네비게이션 -->
+<nav class="category-nav" aria-label="카테고리">
+  <div class="category-nav-inner">
+    <a class="cat-tab {% if cat == '물류자동화' %}active{% endif %}"
+       data-cat="물류자동화" href="/category/물류자동화/">
+      📦 물류자동화
+    </a>
+    <a class="cat-tab {% if cat == '공장자동화' %}active{% endif %}"
+       data-cat="공장자동화" href="/category/공장자동화/">
+      🏭 공장자동화
+    </a>
+    <a class="cat-tab {% if cat == '딥러닝비전' %}active{% endif %}"
+       data-cat="딥러닝비전" href="/category/딥러닝비전/">
+      🤖 딥러닝비전
+    </a>
+    <a class="cat-tab {% if cat == '스마트팩토리' %}active{% endif %}"
+       data-cat="스마트팩토리" href="/category/스마트팩토리/">
+      ⚡ 스마트팩토리
+    </a>
+    <a class="cat-tab {% if cat == '제어SW' %}active{% endif %}"
+       data-cat="제어SW" href="/category/제어SW/">
+      💻 제어SW
+    </a>
+  </div>
+</nav>
+
+<!-- 히어로 배너 -->
+<header class="post-hero">
+  <div class="hero-content">
+    <div class="hero-category-badge">
+      <span class="hero-icon">{{ hero_icon }}</span>
+      {{ cat }} · {{ hero_sub }}
     </div>
-  </header>
-
-  <!-- 포스트 본문 -->
-  <div class="post-body-wrap">
-
-    <!-- 목차 -->
-    <div class="toc-box">
-      <h4>📋 목차</h4>
-      <ul class="toc-list"></ul>
-    </div>
-
-    <div class="post-body">
-      {{ content }}
-    </div>
-
-    <!-- 태그 섹션 -->
-    {% if page.tags %}
-      <div class="post-tags-section">
-        <strong>태그:</strong>
-        {% for tag in page.tags %}
-          <span class="post-tag-item">#{{ tag }}</span>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    <!-- 회사 CTA -->
-    <div class="post-cta">
-      <div class="cta-inner">
-        <h3>⚙️ 아진네트웍스 주식회사</h3>
-        <p>공장 자동화 · 딥러닝 비전 검사 · 스마트팩토리 전문 기업</p>
-        <a href="https://www.ajinnetworks.co.kr" target="_blank" class="cta-btn">회사 홈페이지 방문 →</a>
-      </div>
-    </div>
-
-    <!-- 공유 버튼 -->
-    <div class="share-section">
-      <h4>이 글이 도움이 되셨나요? 공유해주세요</h4>
-      <div>
-<button onclick="shareKakao()" class="share-btn share-kakao">💛 카카오톡</button>
-<a href="https://www.linkedin.com/shareArticle?mini=true&url={{ page.url | absolute_url | uri_escape }}&title={{ page.title | uri_escape }}"
-           target="_blank" rel="noopener" class="share-btn share-linkedin">💼 LinkedIn</a>
-        <button onclick="copyURL()" class="share-btn share-copy">🔗 URL 복사</button>
-      </div>
-    </div>
-
-    <!-- 관련 포스트 -->
-    {% assign all_related = site.posts | where_exp: "p", "p.url != page.url" %}
-    {% assign cat_related = "" | split: "" %}
-    {% for p in all_related %}
-      {% for cat in p.categories %}
-        {% if page.categories contains cat %}
-          {% assign cat_related = cat_related | push: p %}
-          {% break %}
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-    {% if cat_related.size > 0 %}
-    <div class="related-posts">
-      <h4>📌 관련 포스트</h4>
-      <div class="related-grid">
-        {% for p in cat_related limit: 3 %}
-        <a href="{{ p.url | relative_url }}" class="related-item">
-          {% if p.categories %}<div class="related-item-cat">{{ p.categories | first }}</div>{% endif %}
-          <div class="related-item-title">{{ p.title }}</div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:4px;">{{ p.date | date: "%Y.%m.%d" }}</div>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- 목록으로 돌아가기 -->
-    <div class="post-nav">
-      <a href="{{ '/' | relative_url }}" class="back-btn">← 목록으로 돌아가기</a>
+    <h1 class="hero-title">{{ page.title }}</h1>
+    <div class="hero-meta">
+      <span>📅 {{ page.date | date: "%Y년 %m월 %d일" }}</span>
+      <span>·</span>
+      <span>⏱ {{ content | number_of_words | divided_by: 200 | plus: 1 }}분 읽기</span>
     </div>
   </div>
+</header>
 
+<!-- 본문 -->
+<article class="post-body-wrap">
+  {{ content }}
 
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-        integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4"
-        crossorigin="anonymous"
-        onload="initKakao()"></script>
-<script>
-function initKakao() {
-  if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
-    Kakao.init('f49db6cf9929746a86ba847b21167032');
-  }
-}
-window.shareKakao = function() {
-  if (typeof Kakao === 'undefined') { alert("카카오 SDK 로드 실패"); return; }
-  if (!Kakao.isInitialized()) { initKakao(); }
-  Kakao.Share.sendDefault({
-    objectType: "feed",
-    content: {
-      title: document.title,
-      description: (document.querySelector("meta[name=description]") || {}).content || "{{ site.description }}",
-      imageUrl: '{% if page.image %}{{ page.image | absolute_url }}{% else %}{{ "/assets/img/og-default.png" | absolute_url }}{% endif %}',
-      link: {
-        mobileWebUrl: window.location.href,
-        webUrl: window.location.href
-      }
-    },
-    buttons: [{
-      title: "포스트 보기",
-      link: {
-        mobileWebUrl: window.location.href,
-        webUrl: window.location.href
-      }
-    }]
-  });
-};
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var postBody = document.querySelector('.post-body');
-  var tocList = document.querySelector('.toc-list');
-  if (!postBody || !tocList) return;
-
-  var headings = postBody.querySelectorAll('h2, h3');
-  if (headings.length === 0) {
-    var tocBox = document.querySelector('.toc-box');
-    if (tocBox) tocBox.style.display = 'none';
-    return;
-  }
-
-  headings.forEach(function(h, i) {
-    if (!h.id) {
-      var slug = h.textContent.trim()
-        .replace(/\s+/g, '-')
-        .replace(/[<>"&]/g, '');
-      h.id = slug || ('heading-' + i);
-    }
-    var li = document.createElement('li');
-    var a = document.createElement('a');
-    a.href = '#' + h.id;
-    a.textContent = h.textContent.trim();
-    if (h.tagName === 'H3') {
-      li.style.paddingLeft = '1em';
-      li.style.fontSize = '0.9em';
-      li.style.color = '#6b7280';
-    }
-    li.appendChild(a);
-    tocList.appendChild(li);
-  });
-});
-</script>
+  <!-- 태그 -->
+  {% if page.tags.size > 0 %}
+  <div class="post-tags">
+    {% for tag in page.tags %}
+    <a class="post-tag" href="/tag/{{ tag | slugify }}/">#{{ tag }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 </article>
