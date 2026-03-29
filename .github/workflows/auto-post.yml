@@ -1,23 +1,23 @@
-name: Auto Blog Post (주 3회 자동 발행)
+﻿name: Auto Blog Post (二?3???먮룞 諛쒗뻾)
 
 on:
-  # 매주 화·목·토 한국시간 09:00 (UTC 00:00)
+  # 留ㅼ＜ ?붋룸ぉ쨌???쒓뎅?쒓컙 09:00 (UTC 00:00)
   schedule:
-    - cron: '0 0 * * 2'   # 화요일
-    - cron: '0 0 * * 4'   # 목요일
-    - cron: '0 0 * * 6'   # 토요일
+    - cron: '0 0 * * 2'   # ?붿슂??
+    - cron: '0 0 * * 4'   # 紐⑹슂??
+    - cron: '0 0 * * 6'   # ?좎슂??
 
-  # 수동 실행 허용
+  # ?섎룞 ?ㅽ뻾 ?덉슜
   workflow_dispatch:
     inputs:
       mode:
-        description: '실행 모드'
+        description: '?ㅽ뻾 紐⑤뱶'
         required: true
         default: 'once'
         type: choice
         options:
-          - once        # 실제 발행
-          - dry-run     # 초안만 생성
+          - once        # ?ㅼ젣 諛쒗뻾
+          - dry-run     # 珥덉븞留??앹꽦
 
 jobs:
   auto-post:
@@ -33,20 +33,20 @@ jobs:
       LOG_LEVEL: "INFO"
 
     steps:
-      - name: 코드 체크아웃
+      - name: 肄붾뱶 泥댄겕?꾩썐
         uses: actions/checkout@v4.2.2
 
-      - name: Python 3.11 설정
+      - name: Python 3.11 ?ㅼ젙
         uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: 의존성 설치
+      - name: ?섏〈???ㅼ튂
         run: |
           pip install anthropic PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-genai
 
-      - name: .env 파일 생성
+      - name: .env ?뚯씪 ?앹꽦
         run: |
           cat > .env << EOF
           ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
@@ -59,16 +59,18 @@ jobs:
           PYTHONIOENCODING=utf-8
           EOF
 
-      - name: 블로그 포스트 자동 생성 및 발행
+      - name: 釉붾줈洹??ъ뒪???먮룞 ?앹꽦 諛?諛쒗뻾
         run: |
           MODE="${{ github.event.inputs.mode || 'once' }}"
-          echo "실행 모드: $MODE"
+          echo "?ㅽ뻾 紐⑤뱶: $MODE"
           python scripts/run_agent.py --mode $MODE --platform github
 
-      - name: 실행 로그 업로드
+      - name: ?ㅽ뻾 濡쒓렇 ?낅줈??
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: blog-logs-${{ github.run_number }}
           path: output/logs/
           retention-days: 30
+
+
