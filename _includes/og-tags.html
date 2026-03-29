@@ -1,5 +1,5 @@
 ﻿{% assign cat = page.categories | first %}
-{% assign og_img = page.og_image | default: '/assets/images/og-default.png' %}
+{% assign og_img = page.og_image | default: '/assets/img/og-default.png' %}
 <meta property="og:type"        content="article" />
 <meta property="og:title"       content="{{ page.title | escape }}" />
 <meta property="og:description" content="{{ page.description | default: page.excerpt | strip_html | truncate: 160 | escape }}" />

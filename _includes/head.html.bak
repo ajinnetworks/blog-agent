@@ -1,4 +1,4 @@
-<link rel="icon" type="image/png" href="{{ "/assets/images/favicon.png" | relative_url }}">
+﻿<link rel="icon" type="image/png" href="{{ "/assets/images/favicon.png" | relative_url }}">
 <meta charset="utf-8">
 
 <!-- Google Analytics GA4 -->
@@ -944,6 +944,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 </script>
-
-{% if page.layout == 'post' %}{% include og-tags.html %}{% endif %}
-
