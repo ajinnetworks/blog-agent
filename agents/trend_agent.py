@@ -77,22 +77,15 @@ SCHEDULE_ROTATION = [
 ]
 
 
-def get_weighted_category() -> str:
-    """가중치 기반으로 카테고리 랜덤 선택."""
+def get_today_category() -> str:
+    """오늘 요일 기반 카테고리 반환. 화/목/토는 고정 순환, 그 외는 가중치 랜덤."""
     import random
-    categories = list(CATEGORY_WEIGHTS.keys())
+    import datetime as _dt
+    weekday = _dt.datetime.now().weekday()  # 0=월 … 6=일
+    rotation_map = {1: "물류자동화", 3: "딥러닝비전", 5: "공장자동화"}
+    cats = list(CATEGORY_WEIGHTS.keys())
     weights = list(CATEGORY_WEIGHTS.values())
-    return random.choices(categories, weights=weights, k=1)[0]
-
-
-def get_schedule_category() -> str:
-    """오늘 요일에 맞는 스케줄 카테고리 반환 (화=0, 목=1, 토=2, 그 외=가중치)."""
-    weekday = datetime.now().weekday()  # 0=월 … 6=일
-    rotation_map = {1: 0, 3: 1, 5: 2}  # 화=1, 목=3, 토=5
-    idx = rotation_map.get(weekday)
-    if idx is not None:
-        return SCHEDULE_ROTATION[idx]
-    return get_weighted_category()
+    return rotation_map.get(weekday, random.choices(cats, weights=weights, k=1)[0])
 
 
 def get_gemini_response(prompt: str) -> str:
@@ -206,7 +199,7 @@ def select_topics_via_gemini(
         [f"- [{t['source']}] {t['keyword']}" for t in raw_trends[:50]]
     )
 
-    priority_cat = get_schedule_category()
+    priority_cat = get_today_category()
     cat_kw_text = "\n".join(
         f"  {cat}({int(w*100)}%): {', '.join(CATEGORY_KEYWORDS[cat][:5])}"
         for cat, w in CATEGORY_WEIGHTS.items()
