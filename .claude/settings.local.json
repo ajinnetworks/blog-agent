@@ -38,7 +38,9 @@
       "Bash(ssh-keyscan -t ed25519,rsa github.com)",
       "Read(//c/Users/user-0516/.ssh//**)",
       "Read(//c/Users/user-0516/.ssh/**)",
-      "Bash(ssh-keygen -t ed25519 -C \"wave624@naver.com\" -f /c/Users/user-0516/.ssh/id_ed25519 -N \"\")"
+      "Bash(ssh-keygen -t ed25519 -C \"wave624@naver.com\" -f /c/Users/user-0516/.ssh/id_ed25519 -N \"\")",
+      "Bash(rm -f check_writer.py check_writer2.py fix_titles2.py fix_writer_title.py patch_writer_title.py upgrade_actions.py agents/writer_agent.py.bak agents/writer_agent.py.bak_title add_kakao_btn.py check_line.py check_pipeline.py check_post.py check_repos.py check_schedule.py create_workflow.py fix_all.py \"fix_all_final .py\" fix_category.py fix_config.py fix_filter.py fix_final.py fix_image.py fix_kakao_final.py fix_kakao_fn.py fix_kakao_inline.py fix_kakao_url.py fix_post_image.py fix_schedule.py fix_schedule2.py fix_upload.py fix_workflow.py fix_writer_and_logo.py insert_meta.py kakao_share.py logo_fix.py logo_fix2.py logo_optimize_upload.py read_home.py read_layouts.py read_writer.py setup_ga4.py setup_schedule.py test_github.py update_blog_ui.py update_local_writer.py upload_all.py upload_design.py upload_final.py upload_head.py upload_improvements.py upload_logo.py writer_agent_current.py)",
+      "Bash(ls *.py)"
     ],
     "additionalDirectories": [
       "e:\\아진네트웍스\\Claude Code\\블로그 제작\\blog_agent\\.git\\modules"
