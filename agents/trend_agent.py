@@ -3,7 +3,6 @@ trend_agent.py — 트렌드 크롤링 & 주제 선정 에이전트
 Goal: 실시간 트렌드에서 블로그 포스팅 키워드 3개 선정
 """
 
-import datetime
 import json
 import logging
 import os
@@ -49,23 +48,26 @@ CATEGORY_WEIGHTS = {
 
 CATEGORY_KEYWORDS = {
     "물류자동화": [
-        "AGV", "AMR", "컨베이어", "소터", "WMS", "물류자동화",
-        "자동창고", "피킹", "팔레타이징", "물류로봇", "배송자동화"
+        "AGV", "AMR", "컨베이어", "소터", "WMS",
+        "물류자동화", "자동창고", "피킹", "팔레타이징",
+        "물류로봇", "배송자동화"
     ],
     "딥러닝비전": [
         "딥러닝 비전", "머신비전", "비전검사", "불량검출",
-        "AI 검사", "이미지 인식", "결함검출", "OCR", "3D비전",
-        "외관검사", "반도체 검사", "OLED 검사"
+        "AI 검사", "결함검출", "OCR", "3D비전", "외관검사",
+        "반도체 검사", "웨이퍼", "AOI", "클린룸",
+        "OLED 검사", "LCD 패널", "디스플레이 검사"
     ],
     "공장자동화": [
         "공장자동화", "로봇자동화", "CNC", "픽앤플레이스",
         "포장자동화", "용접자동화", "조립자동화",
-        "박스포장", "테이핑", "라벨링", "팔레타이징",
-        "차체용접", "도장자동화", "EV배터리조립"
+        "박스포장", "테이핑", "라벨링", "슈링크포장",
+        "차체용접", "도장자동화", "EV배터리조립", "의장라인"
     ],
     "스마트팩토리": [
         "스마트팩토리", "MES", "디지털트윈", "OEE",
-        "예지보전", "IoT", "엣지AI"
+        "예지보전", "IoT", "엣지AI", "스마트센서",
+        "서보모터", "리니어가이드", "그리퍼", "액추에이터"
     ],
     "제어SW": [
         "PLC", "SCADA", "HMI", "Siemens", "Mitsubishi",
@@ -73,12 +75,12 @@ CATEGORY_KEYWORDS = {
     ],
 }
 
-INDUSTRY_KEYWORDS = {
-    "반도체":    ["웨이퍼핸들링", "클린룸자동화", "AOI검사", "다이본딩", "와이어본딩"],
-    "디스플레이": ["OLED검사", "LCD패널", "본딩자동화", "편광필름", "FOG공정"],
-    "포장":      ["박스포장", "테이핑", "라벨링", "슈링크포장", "진공포장"],
-    "자동차":    ["차체용접", "도장자동화", "EV배터리조립", "타이어조립", "의장라인"],
-    "부품":      ["서보모터", "리니어가이드", "그리퍼", "볼스크류", "액추에이터"],
+INDUSTRY_TO_CATEGORY = {
+    "반도체":    "딥러닝비전",
+    "디스플레이": "딥러닝비전",
+    "포장":      "공장자동화",
+    "자동차":    "공장자동화",
+    "부품":      "스마트팩토리",
 }
 
 # 화/목/토 스케줄 순환
@@ -91,11 +93,19 @@ SCHEDULE_ROTATION = [
 
 def get_today_category() -> str:
     """오늘 요일 기반 카테고리 반환. 화/목/토는 고정 순환, 그 외는 가중치 랜덤."""
-    weekday = datetime.datetime.now().weekday()  # 0=월 … 6=일
+    weekday = datetime.now().weekday()  # 0=월 … 6=일
     rotation_map = {1: "물류자동화", 3: "딥러닝비전", 5: "공장자동화"}
     cats = list(CATEGORY_WEIGHTS.keys())
     weights = list(CATEGORY_WEIGHTS.values())
     return rotation_map.get(weekday, random.choices(cats, weights=weights, k=1)[0])
+
+
+def map_industry_to_category(keyword: str) -> str:
+    """업종 키워드 포함 시 해당 카테고리 반환, 없으면 오늘 카테고리."""
+    for industry, category in INDUSTRY_TO_CATEGORY.items():
+        if industry in keyword:
+            return category
+    return get_today_category()
 
 
 def get_gemini_response(prompt: str) -> str:
