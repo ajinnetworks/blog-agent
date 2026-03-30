@@ -97,6 +97,35 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
+def validate_title(title: str) -> dict:
+    """제목 SEO 규칙 검증. errors → 점수 차감, warnings → 경고만."""
+    errors = []
+    warnings = []
+
+    if len(title) > 40:
+        errors.append(f"제목 {len(title)}자 초과 (허용: 40자)")
+
+    if title.startswith("아진네트웍스"):
+        errors.append("브랜드명으로 제목 시작 금지")
+
+    if "아진네트웍스" not in title:
+        warnings.append("아진네트웍스 미포함 — 브랜드 노출 약화")
+
+    if title.count("아진네트웍스") >= 2:
+        errors.append("아진네트웍스 중복 포함")
+
+    patterns = ["완전 정복", "도입 전", "해결한", "달성한"]
+    if not any(p in title for p in patterns):
+        warnings.append("SEO 패턴 A~D 미적용 의심")
+
+    return {
+        "title": title,
+        "length": len(title),
+        "errors": errors,
+        "warnings": warnings,
+        "passed": len(errors) == 0,
+    }
+
 
 REVIEW_PROMPT_SIMPLE = """다음 포스트를 100점 만점으로 평가해줘.
 기준: 전문성(40), 정확성(30), 가독성(30)
@@ -160,14 +189,27 @@ def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
         if r is None:
             r = {"score": 0, "pass": False, "reason": "결과 없음"}
         score = r.get("score", 0)
+
+        # 제목 검증 — 오류당 -10점, 경고당 -5점
+        title_check = validate_title(post.get("title", ""))
+        if not title_check["passed"]:
+            logger.warning(f"제목 검증 실패: {title_check['errors']}")
+            score -= 10 * len(title_check["errors"])
+        if title_check["warnings"]:
+            score -= 5 * len(title_check["warnings"])
+        score = max(0, score)
+
         passed = score >= min_score
+        issues = [] if passed else [{"severity": "medium", "description": r.get("reason", "")}]
+        issues += [{"severity": "high", "description": e} for e in title_check["errors"]]
         reviews.append({
             "total_score": score,
             "breakdown": {},
-            "issues": [] if passed else [{"severity": "medium", "description": r.get("reason", "")}],
+            "issues": issues,
             "pass": passed,
             "min_score": min_score,
             "revision_notes": r.get("reason", ""),
+            "title_check": title_check,
         })
         status = "합격" if passed else "불합격"
         logger.info(f"[{i+1}/{len(posts)}] '{post.get('title', '')}' {status} ({score}/{min_score})")
@@ -204,14 +246,30 @@ def review_post(post: dict) -> dict:
     try:
         r = json.loads(raw)
         score = r.get("score", 0)
+
+        # 제목 검증 — 오류당 -10점, 경고당 -5점
+        title_check = validate_title(post.get("title", ""))
+        if not title_check["passed"]:
+            logger.warning(f"제목 검증 실패: {title_check['errors']}")
+            score -= 10 * len(title_check["errors"])
+        else:
+            logger.info(f"제목 검증 통과: {title_check['length']}자")
+        if title_check["warnings"]:
+            logger.warning(f"제목 경고: {title_check['warnings']}")
+            score -= 5 * len(title_check["warnings"])
+        score = max(0, score)
+
         passed = score >= min_score
+        issues = [] if passed else [{"severity": "medium", "description": r.get("reason", "")}]
+        issues += [{"severity": "high", "description": e} for e in title_check["errors"]]
         review = {
             "total_score": score,
             "breakdown": {},
-            "issues": [] if passed else [{"severity": "medium", "description": r.get("reason", "")}],
+            "issues": issues,
             "pass": passed,
             "min_score": min_score,
             "revision_notes": r.get("reason", ""),
+            "title_check": title_check,
         }
     except json.JSONDecodeError as e:
         logger.error(f"검수 결과 JSON 파싱 실패: {e}")
