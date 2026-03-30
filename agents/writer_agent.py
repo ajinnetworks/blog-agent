@@ -167,7 +167,13 @@ def classify_category(keyword: str, angle: str) -> str:
     return "스마트팩토리"
 
 
+PROMPT_CATEGORIES = {"물류자동화", "공장자동화", "딥러닝비전", "스마트팩토리", "제어SW"}
+
+
 def validate_category(category: str) -> str:
+    # 프롬프트 지시 5개 카테고리는 항상 통과
+    if category in PROMPT_CATEGORIES:
+        return category
     if category in ALLOWED_CATEGORIES:
         return category
     for allowed in ALLOWED_CATEGORIES:
