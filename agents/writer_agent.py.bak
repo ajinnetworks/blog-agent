@@ -47,7 +47,7 @@ def get_gemini_response(prompt: str) -> str:
                 return response.text.strip()
             except Exception as e:
                 err = str(e)
-                if "429" in err or "503" in err or "quota" in err.lower() or "UNAVAILABLE" in err or "ResourceExhausted" in type(e).__name__ or "ServerError" in type(e).__name__ or "404" in err:
+                if "429" in err or "quota" in err.lower() or "ResourceExhausted" in type(e).__name__ or "404" in err:
                     logger.warning(f"[WARN] {model_name} 사용 불가 → 다음 모델 시도")
                     continue
                 raise
@@ -158,34 +158,16 @@ ALLOWED_CATEGORIES = [cat["name"] for cat in BLOG_CATEGORIES]
 CATEGORY_KEYWORDS = {cat["name"]: cat["keywords"] for cat in BLOG_CATEGORIES}
 
 
-VISION_KEYWORDS = [
-    "딥러닝", "비전검사", "불량검출", "머신비전",
-    "AOI", "외관검사", "반도체 검사", "웨이퍼",
-    "OLED 검사", "LCD", "디스플레이 검사", "3D비전",
-    "반도체", "OLED", "디스플레이", "클린룸",
-]
-
-
 def classify_category(keyword: str, angle: str) -> str:
-    text = f"{keyword} {angle}"
-    # 딥러닝비전 우선 체크 (BLOG_CATEGORIES의 '비전검사'로 빠지지 않도록)
-    if any(kw in text for kw in VISION_KEYWORDS):
-        return "딥러닝비전"
-    text_lower = text.lower()
+    text = f"{keyword} {angle}".lower()
     for cat in BLOG_CATEGORIES:
         for kw in cat["keywords"]:
-            if kw.lower() in text_lower:
+            if kw.lower() in text:
                 return cat["name"]
     return "스마트팩토리"
 
 
-PROMPT_CATEGORIES = {"물류자동화", "공장자동화", "딥러닝비전", "스마트팩토리", "제어SW"}
-
-
 def validate_category(category: str) -> str:
-    # 프롬프트 지시 5개 카테고리는 항상 통과
-    if category in PROMPT_CATEGORIES:
-        return category
     if category in ALLOWED_CATEGORIES:
         return category
     for allowed in ALLOWED_CATEGORIES:
@@ -243,7 +225,7 @@ def generate_post(topic: dict) -> dict:
 
 반드시 JSON 형식만 반환. 마크다운 코드블록 없이 순수 JSON만:
 {{
-  "title": "아래 규칙에 따라 제목을 작성하세요.\n\n[필수 규칙]\n1. 40자 이내\n2. 제목 앞 15자 안에 핵심 키워드 포함\n3. 아진네트웍스는 제목 중간 또는 끝에 1회만 포함\n4. 수치 사용 시 본문에 반드시 (추측입니다) 표기\n5. 의문형 또는 명사형으로 마무리\n6. SEO 최적화 키워드 검색 시 아진네트웍스(주)가 잘 노출되도록 작성\n\n[카테고리별 핵심 키워드]\n- 물류자동화: AGV·AMR·컨베이어·소터·자동창고·팔레타이징·WMS\n- 딥러닝비전: 비전검사·불량검출·머신비전·AI검사·3D비전·OCR·외관검사\n- 공장자동화: 픽앤플레이스·포장자동화·용접로봇·CNC무인화·조립자동화\n- 스마트팩토리: MES·OEE·디지털트윈·예지보전·IoT·엣지AI\n- 제어SW: PLC·SCADA·HMI·모션제어·필드버스\n\n[업종별 키워드 → 카테고리 매핑]\n- 반도체·디스플레이 → 딥러닝비전\n  키워드: 웨이퍼검사·AOI·OLED불량·LCD패널검사\n- 포장·자동차 → 공장자동화\n  키워드: 박스포장·팔레타이징·차체용접·EV배터리조립\n- 부품정보 → 스마트팩토리\n  키워드: 서보모터·그리퍼·리니어가이드·액추에이터\n\n[패턴 선택 — 검색 의도 기반]\n패턴A [정보탐색형]:\n{{핵심키워드}} 완전 정복 — 아진네트웍스 기술팀 해설\n예) AGV·AMR 차이 완전 정복 — 아진네트웍스 기술팀 해설\n\n패턴B [도입검토형]:\n{{핵심키워드}} 도입 전 반드시 확인할 {{숫자}}가지 — 아진네트웍스\n예) 비전검사 도입 전 반드시 확인할 5가지 — 아진네트웍스\n\n패턴C [문제해결형]:\n{{현장문제}}? {{핵심키워드}}로 해결한 아진네트웍스 사례\n예) 불량률 3%? 딥러닝 비전검사로 해결한 아진네트웍스 사례\n\n패턴D [수치강조형]:\n{{핵심키워드}}로 {{수치}} 달성한 {{공정명}} 자동화 방법\n예) AGV 도입으로 물류비 30% 절감한 창고 자동화 방법\n\n[금지 표현]\n- 최신·최고·완벽한 등 근거없는 과장\n- 브랜드명으로 제목 시작\n- 수치를 검증 없이 사실처럼 표기",
+  "title": "제목",
   "meta_description": "메타설명 (150자 이내)",
   "category": "위 5개 중 하나",
   "tags": ["태그1", "태그2"],
@@ -308,7 +290,7 @@ def save_draft(post: dict) -> str:
 
     md_path = draft_dir / f"{base_name}.md"
     md_content = f"""---
-title: {post.get("title", "") or self._generate_title(post.get("content",""), post.get("category",""))}
+title: {post.get("title", "")}
 meta_description: {post.get("meta_description", "")}
 tags: {post.get("tags", [])}
 category: {post.get("category", "")}

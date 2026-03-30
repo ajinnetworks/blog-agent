@@ -29,7 +29,16 @@
       "Bash(sed -i 's/- \"\"gemini-2.0-flash\"\"/- \"\"gemini-2.0-flash-lite\"\"/' config/settings.yaml)",
       "Bash(sed -i 's/- \"\"gemini-1.5-flash-8b\"\"/- \"\"gemini-flash-latest\"\"/' config/settings.yaml)",
       "Bash(ls \"e:\\\\아진네트웍스\\\\Claude Code\\\\블로그 제작\\\\blog_agent\\\\.github\\\\workflows\"\" 2>/dev/null || echo \"디렉토리 없음 \")",
-      "Bash(ls \"e:\\\\아진네트웍스\\\\Claude Code\\\\블로그 제작\\\\blog_agent\\\\github_pages\\\\_posts\"\" 2>/dev/null | sort -r | head -10 || echo \"_posts 없음 \")"
+      "Bash(ls \"e:\\\\아진네트웍스\\\\Claude Code\\\\블로그 제작\\\\blog_agent\\\\github_pages\\\\_posts\"\" 2>/dev/null | sort -r | head -10 || echo \"_posts 없음 \")",
+      "Bash(gh api:*)",
+      "Bash(nslookup github.com)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(ssh-keyscan -t ed25519 github.com)",
+      "Bash(mkdir -p /c/Users/user-0516/.ssh)",
+      "Bash(ssh-keyscan -t ed25519,rsa github.com)",
+      "Read(//c/Users/user-0516/.ssh//**)",
+      "Read(//c/Users/user-0516/.ssh/**)",
+      "Bash(ssh-keygen -t ed25519 -C \"wave624@naver.com\" -f /c/Users/user-0516/.ssh/id_ed25519 -N \"\")"
     ],
     "additionalDirectories": [
       "e:\\아진네트웍스\\Claude Code\\블로그 제작\\blog_agent\\.git\\modules"
