@@ -91,7 +91,7 @@ jobs:
 
       - name: Enforce Ajin industrial safe-mode
         run: |
-          python scripts/test_safe_mode.py
+          python -m scripts.test_safe_mode
 
       - name: Generate and publish blog post
         run: |
