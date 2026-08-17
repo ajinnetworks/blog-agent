@@ -152,7 +152,6 @@ def _extract_trend_keywords(prompt: str) -> list[str]:
 
 
 def _normalize_text(text: str) -> str:
-    """Normalize punctuation/spacing so industrial compound terms match reliably."""
     text = unicodedata.normalize("NFKC", text or "").lower()
     text = re.sub(r"[·•・/\\|,;:_+\-–—()\[\]{}]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
@@ -174,7 +173,6 @@ def _contains_blocked_term(text: str) -> bool:
 
 
 def _industrial_score(text: str) -> tuple[int, str | None]:
-    """Return (score, best_category). Minimum safe acceptance score is 2."""
     if _contains_blocked_term(text):
         return -100, None
 
@@ -208,35 +206,42 @@ def _safe_category(priority: str) -> str:
     return "공장자동화"
 
 
-def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
-    priority_match = re.search(r"오늘 우선 카테고리:\s*(.+)", prompt)
-    priority = _safe_category(priority_match.group(1).strip() if priority_match else "공장자동화")
-    trends = _extract_trend_keywords(prompt)
+def _topic_dict(keyword: str, category: str, reason: str, score: int | None = None) -> dict:
+    score_note = f" (score={score})" if score is not None else ""
+    return {
+        "keyword": keyword,
+        "angle": f"{keyword}를 실제 자동화 설비 설계·제어·생산성·품질·ROI 관점에서 기술적으로 설명",
+        "reason": reason + score_note,
+        "category": category,
+        "estimated_search_volume": "medium",
+    }
 
-    candidates = []
-    for keyword in trends:
-        score, category = _industrial_score(keyword)
-        if score >= 2 and category:
-            candidates.append((score, keyword, category))
-        else:
-            logger.warning("[SAFE-MODE] trend rejected: '%s' (industrial_score=%s)", keyword, score)
 
-    candidates.sort(key=lambda item: item[0], reverse=True)
-    selected = []
+def validate_selected_topics(selected: list[dict], priority: str = "공장자동화", top_n: int = 3) -> list[dict]:
+    """Validate any LLM-selected topics and fill rejected/missing slots only from safe industrial seeds."""
+    priority = _safe_category(priority)
+    validated = []
     seen = set()
-    for score, keyword, category in candidates:
-        if keyword in seen:
+
+    for item in selected or []:
+        keyword = str(item.get("keyword", "")).strip()
+        if not keyword or keyword in seen:
             continue
-        selected.append({
-            "keyword": keyword,
-            "angle": f"{keyword}를 제조 자동화의 생산성·품질·Cycle Time·ROI 관점에서 기술적으로 분석",
-            "reason": f"산업 연관성 검증 통과(score={score})",
-            "category": category if category in SAFE_TOPIC_POOL else priority,
-            "estimated_search_volume": "medium",
-        })
+        score, detected = _industrial_score(keyword)
+        if score < 2 or not detected:
+            logger.warning("[INDUSTRIAL-GATE] rejected LLM topic: '%s' (score=%s)", keyword, score)
+            continue
+        category = item.get("category")
+        if category not in SAFE_TOPIC_POOL:
+            category = detected if detected in SAFE_TOPIC_POOL else priority
+        clean = dict(item)
+        clean["keyword"] = keyword
+        clean["category"] = category
+        clean["reason"] = f"{clean.get('reason', 'LLM 선정')} | 산업 gate 통과(score={score})"
+        validated.append(clean)
         seen.add(keyword)
-        if len(selected) >= top_n:
-            break
+        if len(validated) >= top_n:
+            return validated
 
     pool_order = [priority] + [c for c in SAFE_TOPIC_POOL if c != priority]
     for category in pool_order:
@@ -245,22 +250,38 @@ def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
                 continue
             score, detected = _industrial_score(keyword)
             if score < 2 or not detected:
-                logger.error("[SAFE-MODE] vetted seed failed industrial gate: '%s' score=%s", keyword, score)
+                logger.error("[INDUSTRIAL-GATE] safe seed failed: '%s' score=%s", keyword, score)
                 continue
-            selected.append({
-                "keyword": keyword,
-                "angle": f"{keyword}를 실제 자동화 설비 설계·제어·현장 적용 기준으로 설명",
-                "reason": "실시간 트렌드가 산업 기준을 통과하지 못해 아진네트웍스 검증 주제로 대체",
-                "category": category,
-                "estimated_search_volume": "medium",
-            })
+            validated.append(_topic_dict(keyword, category, "LLM 결과가 산업 기준을 통과하지 못해 검증 주제로 대체", score))
             seen.add(keyword)
-            if len(selected) >= top_n:
-                return selected
+            if len(validated) >= top_n:
+                return validated
 
-    if len(selected) < top_n:
-        raise RuntimeError(f"Safe topic pool could not supply {top_n} validated industrial topics")
-    return selected[:top_n]
+    raise RuntimeError(f"Industrial gate could not supply {top_n} validated topics")
+
+
+def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
+    priority_match = re.search(r"오늘 우선 카테고리:\s*(.+)", prompt)
+    priority = _safe_category(priority_match.group(1).strip() if priority_match else "공장자동화")
+    trends = _extract_trend_keywords(prompt)
+    candidates = []
+    for keyword in trends:
+        score, category = _industrial_score(keyword)
+        if score >= 2 and category:
+            candidates.append(_topic_dict(keyword, category if category in SAFE_TOPIC_POOL else priority, "산업 연관성 검증 통과", score))
+        else:
+            logger.warning("[SAFE-MODE] trend rejected: '%s' (industrial_score=%s)", keyword, score)
+    candidates.sort(key=lambda item: _industrial_score(item["keyword"])[0], reverse=True)
+    return validate_selected_topics(candidates, priority=priority, top_n=top_n)
+
+
+def _short_safe_title(keyword: str) -> str:
+    suffix = " | 아진네트웍스"
+    max_keyword = max(1, 40 - len(suffix))
+    base = keyword.strip()
+    if len(base) > max_keyword:
+        base = base[:max_keyword].rstrip(" ·-/—")
+    return (base + suffix)[:40]
 
 
 def _rule_based(prompt: str) -> str:
@@ -282,7 +303,7 @@ def _rule_based(prompt: str) -> str:
 
     if "개선된 포스트를 동일한 JSON 형식으로 반환" in prompt:
         return json.dumps({
-            "title": "자동화 설비 개선 체크리스트 - 아진네트웍스",
+            "title": "자동화 설비 개선 | 아진네트웍스",
             "content": (
                 "자동화 설비 개선은 현행 공정 계측, 병목 분석, Cycle Time 검증, 인터록 정의, "
                 "안전회로 검증, PoC 시험 순으로 진행해야 합니다. 생산성 개선 효과는 현장 데이터로 확인하고 "
@@ -302,7 +323,7 @@ def _rule_based(prompt: str) -> str:
             detected_category = "공장자동화"
             keyword = SAFE_TOPIC_POOL[detected_category][0]
 
-        title = f"{keyword} — 아진네트웍스 기술 가이드"[:60]
+        title = _short_safe_title(keyword)
         content = (
             f"# {keyword}\n\n"
             f"{keyword}를 검토할 때는 단순 장비 선정이 아니라 공정 데이터와 기구·제어 인터페이스를 함께 분석해야 합니다.\n\n"
@@ -321,8 +342,8 @@ def _rule_based(prompt: str) -> str:
         return json.dumps({
             "title": title,
             "content": content,
-            "category": detected_category,
-            "tags": [keyword, detected_category, "산업자동화", "아진네트웍스"],
+            "category": detected_category if detected_category in SAFE_TOPIC_POOL else "공장자동화",
+            "tags": [keyword, detected_category or "공장자동화", "산업자동화", "아진네트웍스"],
             "meta_description": f"{keyword}의 공정분석, 기구·PLC·비전 연동, 안전, PoC, ROI 검토 기준을 아진네트웍스가 설명합니다.",
         }, ensure_ascii=False)
 
@@ -330,7 +351,6 @@ def _rule_based(prompt: str) -> str:
 
 
 def get_llm_response(prompt: str) -> str:
-    """Try Gemini, then Claude, then Ajin industrial deterministic safe mode."""
     errors = []
     try:
         return _gemini(prompt)
