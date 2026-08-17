@@ -1,8 +1,10 @@
-"""Recent Topic Guard V1 — prevent repetitive industrial blog topics.
+"""Phase 3 topic guard and category rotation for Ajin Networks blog automation.
 
-Reads recent Jekyll posts from the configured blog repository, extracts titles,
-and rejects proposed topics that are too similar to recently published content.
-The guard is deterministic and remains active when external LLMs are unavailable.
+Responsibilities:
+- Read recently published Jekyll titles from BLOG_REPO.
+- Reject proposed topics that are too similar to recent content or same-run topics.
+- Refill rejected slots from a larger, category-balanced industrial topic pool.
+- Keep deterministic behavior when external LLM providers are unavailable.
 """
 
 import logging
@@ -22,6 +24,77 @@ STOPWORDS = {
     "분석", "적용", "구축", "연계", "활용", "전", "및", "위한", "하는", "줄이는",
 }
 
+CATEGORY_ORDER = [
+    "물류자동화", "딥러닝비전", "공장자동화", "제어SW", "스마트팩토리",
+    "포장자동화", "자동차자동화", "의료기기자동화", "반도체자동화",
+]
+
+PHASE3_TOPIC_POOL = {
+    "물류자동화": [
+        "AMR Fleet 운영 시 교차로 정체와 Deadlock을 줄이는 교통제어 기준",
+        "자동창고 AS/RS 처리량 산정과 WMS·PLC 인터페이스 설계",
+        "컨베이어 Merge·Diverter 병목을 줄이는 센서와 제어 로직",
+        "팔레트 이송라인 Buffer 용량과 Cycle Time 산정 방법",
+        "AMR 충전 스테이션 수량과 Opportunity Charging 운영 기준",
+    ],
+    "딥러닝비전": [
+        "AI 비전검사 조명 조건을 고정하는 DOE와 Golden Sample 운영 방법",
+        "2D 비전과 3D 비전 선택 시 정밀도·Cycle Time 비교 기준",
+        "라인스캔 카메라 검사에서 Encoder 동기와 조명 균일도 설계",
+        "비전검사 오검·미검을 줄이는 불량 데이터셋 관리 방법",
+        "로봇 비전 Pick 보정 시 Hand-Eye Calibration 검증 기준",
+    ],
+    "공장자동화": [
+        "산업용 로봇 EOAT 설계 시 Payload·Moment·관성 검토 방법",
+        "로봇 셀 Cycle Time을 줄이는 동작경로와 I/O 병렬처리 방법",
+        "자동화 설비 FAT 전 인터록과 Recovery 시나리오 검증 기준",
+        "협동로봇 적용 전 안전거리와 작업자 간섭 검토 포인트",
+        "조립자동화에서 Poka-Yoke와 Traceability를 구현하는 방법",
+    ],
+    "제어SW": [
+        "PLC·HMI 알람 표준화와 설비 정지 원인 추적 설계 방법",
+        "OPC-UA와 MES 연계 시 Tag 구조와 통신 장애 복구 기준",
+        "EtherCAT 서보축 원점복귀와 안전정지 Sequence 설계",
+        "Profinet 네트워크 구성 시 Device Name·IP·진단 표준",
+        "PLC 프로그램 모듈화로 설비 개조 시간을 줄이는 구조",
+    ],
+    "스마트팩토리": [
+        "OEE 손실 6대 항목으로 자동화 투자 우선순위를 정하는 방법",
+        "예지보전 센서 선정 시 진동·전류·온도 데이터 수집 기준",
+        "MES 구축 전 설비 데이터 표준과 생산실적 정의 방법",
+        "디지털트윈 PoC에서 실제 Cycle Time과 모델 오차 검증 방법",
+        "스마트팩토리 구축 전 설비별 데이터 Ownership 정의 기준",
+    ],
+    "포장자동화": [
+        "파우치 포장자동화에서 개구·삽입·실링 안정화 설계 기준",
+        "카토닝 자동화에서 제품 정렬과 박스 공급 병목 개선 방법",
+        "실링 공정 온도·압력·시간 Recipe 관리와 품질 Traceability",
+        "포장라인 Vision 검사와 Reject Station 인터록 설계",
+        "다품종 포장설비 Changeover 시간을 줄이는 치구 표준화",
+    ],
+    "자동차자동화": [
+        "자동차 열처리 로봇 핸들링에서 위치 반복정밀도 검증 방법",
+        "중량 자동차부품 로봇 Gripper 설계 시 안전율과 Fail-safe 기준",
+        "차종 변경 대응 자동화 지그의 Quick Change 설계 기준",
+        "자동차 조립 토크 Traceability와 PLC·Nutrunner 연계 방법",
+        "자동차 부품 Palletizing에서 간지 취급과 적재 안정화 방법",
+    ],
+    "의료기기자동화": [
+        "카테터 권선 자동화에서 장력과 최소 굽힘반경 관리 기준",
+        "의료기기 파우치 삽입 자동화에서 제품 손상 방지 설계",
+        "튜브 인장검사 지그의 Load Cell 선정과 반복성 검증 방법",
+        "의료 포장 실링 공정의 Recipe와 Lot Traceability 설계",
+        "의료기기 자동화 FAT에서 검사 데이터 무결성 검증 항목",
+    ],
+    "반도체자동화": [
+        "반도체 클린룸 로봇 적용 시 Particle과 Cable Management 기준",
+        "웨이퍼 핸들링 자동화에서 진공 Gripper와 파손 감지 설계",
+        "반도체 인라인 비전검사 Cycle Time과 검사해상도 최적화",
+        "FOUP 이송 자동화에서 Interlock과 Carrier ID 추적 방법",
+        "반도체 설비 SECS/GEM 연계 전 PLC 데이터 구조 검토 항목",
+    ],
+}
+
 
 def _normalize(text: str) -> str:
     text = re.sub(r"[^0-9a-zA-Z가-힣]+", " ", str(text).lower())
@@ -33,7 +106,6 @@ def _tokens(text: str) -> set[str]:
 
 
 def topic_similarity(a: str, b: str) -> float:
-    """Hybrid lexical similarity: token overlap + normalized sequence similarity."""
     na, nb = _normalize(a), _normalize(b)
     if not na or not nb:
         return 0.0
@@ -62,7 +134,6 @@ def _title_from_markdown(content: str, fallback_name: str) -> str:
 
 
 def load_recent_titles(days: int = 60, max_posts: int = 120) -> list[str]:
-    """Load recent published titles from BLOG_REPO. Fail open on GitHub read errors."""
     token = os.getenv("BLOG_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
     repo_name = os.getenv("BLOG_REPO") or os.getenv("GITHUB_REPO")
     branch = os.getenv("GITHUB_BRANCH", "main")
@@ -100,7 +171,6 @@ def load_recent_titles(days: int = 60, max_posts: int = 120) -> list[str]:
 
 def filter_recent_topics(topics: list[dict], recent_titles: list[str] | None = None,
                          days: int = 60, threshold: float = 0.62) -> tuple[list[dict], list[dict]]:
-    """Reject topics similar to recent titles or another topic already accepted in this batch."""
     history = list(recent_titles) if recent_titles is not None else load_recent_titles(days=days)
     accepted, rejected = [], []
 
@@ -112,11 +182,55 @@ def filter_recent_topics(topics: list[dict], recent_titles: list[str] | None = N
             score = topic_similarity(keyword, existing)
             if score > best_score:
                 best_title, best_score = existing, score
-
         if best_score >= threshold:
             rejected.append({"topic": topic, "matched_title": best_title, "similarity": round(best_score, 3)})
             logger.warning("[TOPIC-GUARD] rejected '%s' ~= '%s' (%.3f)", keyword, best_title, best_score)
         else:
             accepted.append(topic)
-
     return accepted, rejected
+
+
+def _rotation_start(now: datetime | None = None) -> int:
+    now = now or datetime.now(KST)
+    # Tuesday/Thursday/Saturday scheduled runs naturally advance across the pool.
+    return (now.toordinal() + now.isocalendar().week) % len(CATEGORY_ORDER)
+
+
+def refill_topics(accepted: list[dict], recent_titles: list[str], target_count: int = 3,
+                  threshold: float = 0.62, now: datetime | None = None) -> list[dict]:
+    """Fill rejected slots with category-balanced, non-duplicate vetted topics."""
+    result = list(accepted)
+    if len(result) >= target_count:
+        return result[:target_count]
+
+    start = _rotation_start(now)
+    categories = CATEGORY_ORDER[start:] + CATEGORY_ORDER[:start]
+    existing_titles = list(recent_titles) + [x.get("keyword", "") for x in result]
+
+    for category in categories:
+        for keyword in PHASE3_TOPIC_POOL.get(category, []):
+            best = max((topic_similarity(keyword, old) for old in existing_titles), default=0.0)
+            if best >= threshold:
+                continue
+            result.append({
+                "keyword": keyword,
+                "category": category,
+                "angle": f"{keyword}를 기구·제어·Cycle Time·안전·PoC·ROI 관점에서 설명",
+                "reason": "Phase 3 category rotation refill",
+                "estimated_search_volume": "medium",
+            })
+            existing_titles.append(keyword)
+            logger.info("[TOPIC-ROTATION] refill: %s -> %s", category, keyword)
+            if len(result) >= target_count:
+                return result
+    return result
+
+
+def guard_and_refill_topics(topics: list[dict], days: int = 60, threshold: float = 0.62,
+                            target_count: int = 3) -> tuple[list[dict], list[dict]]:
+    """Production entrypoint: history load -> duplicate filter -> balanced refill."""
+    history = load_recent_titles(days=days)
+    accepted, rejected = filter_recent_topics(topics, recent_titles=history, threshold=threshold)
+    final_topics = refill_topics(accepted, history, target_count=target_count, threshold=threshold)
+    logger.info("[TOPIC-GUARD] final=%s / rejected=%s", len(final_topics), len(rejected))
+    return final_topics, rejected
