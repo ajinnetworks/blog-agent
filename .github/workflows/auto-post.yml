@@ -29,6 +29,8 @@ jobs:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
       LOG_LEVEL: "INFO"
+      RECENT_TOPIC_DAYS: "60"
+      RECENT_TOPIC_THRESHOLD: "0.62"
 
     steps:
       - name: Checkout code
@@ -55,17 +57,15 @@ jobs:
           LOG_LEVEL=INFO
           PYTHONUTF8=1
           PYTHONIOENCODING=utf-8
+          RECENT_TOPIC_DAYS=60
+          RECENT_TOPIC_THRESHOLD=0.62
           EOF
 
       - name: Enable multi-provider LLM fallback
         run: |
           python - <<'PY'
           from pathlib import Path
-          files = [
-              Path('agents/trend_agent.py'),
-              Path('agents/writer_agent.py'),
-              Path('agents/reviewer_agent.py'),
-          ]
+          files = [Path('agents/trend_agent.py'), Path('agents/writer_agent.py'), Path('agents/reviewer_agent.py')]
           for path in files:
               text = path.read_text(encoding='utf-8')
               marker = 'logger = logging.getLogger(__name__)'
@@ -87,46 +87,62 @@ jobs:
           from pathlib import Path
           path = Path('agents/writer_agent.py')
           text = path.read_text(encoding='utf-8')
-
           marker = 'logger = logging.getLogger(__name__)'
           injection = marker + '\n\nfrom agents.runtime_guard import all_llm_providers_disabled, make_safe_mode_seo_title\n'
           if 'from agents.runtime_guard import all_llm_providers_disabled, make_safe_mode_seo_title' not in text:
               text = text.replace(marker, injection, 1)
-
           old_wait = '''        if i > 1:\n            logger.info("[RPM 보호] 5초 대기 중...")\n            time.sleep(5)'''
           new_wait = '''        if i > 1:\n            if all_llm_providers_disabled():\n                logger.info("[RPM 보호] 외부 LLM circuit open -> 대기 생략")\n            else:\n                logger.info("[RPM 보호] 5초 대기 중...")\n                time.sleep(5)'''
           if old_wait not in text:
               raise SystemExit('Writer RPM wait block not found; refusing unsafe patch')
           text = text.replace(old_wait, new_wait, 1)
-
           old_title = '''    post["title"] = _normalize_title(post.get("title", ""), fallback=topic.get("keyword", "산업자동화 기술 가이드"))'''
           new_title = '''    post["title"] = _normalize_title(post.get("title", ""), fallback=topic.get("keyword", "산업자동화 기술 가이드"))\n    if all_llm_providers_disabled():\n        post["title"] = make_safe_mode_seo_title(topic.get("keyword", post["title"]))'''
           if old_title not in text:
               raise SystemExit('Writer title normalization block not found; refusing unsafe patch')
           text = text.replace(old_title, new_title, 1)
-
           path.write_text(text, encoding='utf-8')
           print('safe-mode writer optimization enabled')
           PY
 
-      - name: Validate LLM fallback wiring
+      - name: Enable Phase 3 recent-topic guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/run_agent.py')
+          text = path.read_text(encoding='utf-8')
+          import_anchor = 'from agents.publisher_image_bridge import install as install_image_publisher'
+          guard_import = import_anchor + '\nfrom agents.recent_topic_guard import filter_recent_topics'
+          if 'from agents.recent_topic_guard import filter_recent_topics' not in text:
+              text = text.replace(import_anchor, guard_import, 1)
+          old = '''    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
+          new = '''    if not topic_override:\n        guard_days = int(os.environ.get("RECENT_TOPIC_DAYS", "60"))\n        guard_threshold = float(os.environ.get("RECENT_TOPIC_THRESHOLD", "0.62"))\n        topics, duplicate_topics = filter_recent_topics(topics, days=guard_days, threshold=guard_threshold)\n        result_summary["stages"]["recent_topic_guard"] = {\n            "days": guard_days, "threshold": guard_threshold,\n            "accepted": len(topics), "rejected": len(duplicate_topics),\n            "duplicates": duplicate_topics,\n        }\n        logger.info("[TOPIC-GUARD] accepted=%s rejected=%s", len(topics), len(duplicate_topics))\n    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
+          if old not in text:
+              raise SystemExit('run_agent trend block not found; refusing unsafe Phase 3 patch')
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          print('Phase 3 recent-topic guard enabled')
+          PY
+
+      - name: Validate runtime wiring
         run: |
           grep -R "llm_fallback" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
           grep -R "외부 LLM circuit open" agents/writer_agent.py
           grep -R "make_safe_mode_seo_title" agents/writer_agent.py
-          python -m py_compile agents/llm_fallback.py agents/runtime_guard.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py
+          grep -R "recent_topic_guard" scripts/run_agent.py
+          python -m py_compile agents/llm_fallback.py agents/runtime_guard.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py agents/recent_topic_guard.py scripts/run_agent.py
 
       - name: Enforce Ajin industrial safe-mode
-        run: |
-          python -m scripts.test_safe_mode
+        run: python -m scripts.test_safe_mode
 
       - name: Enforce final content and image quality
-        run: |
-          python -m scripts.test_quality_pipeline
+        run: python -m scripts.test_quality_pipeline
 
       - name: Enforce Phase 2 image front matter
-        run: |
-          python -m scripts.test_phase2_images
+        run: python -m scripts.test_phase2_images
+
+      - name: Enforce Phase 3 duplicate protection
+        run: python -m scripts.test_recent_topic_guard
 
       - name: Generate and publish blog post
         run: |
