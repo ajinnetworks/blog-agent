@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import unicodedata
 
 from google import genai as google_genai
 from anthropic import Anthropic
@@ -19,7 +20,6 @@ logger = logging.getLogger(__name__)
 GEMINI_MODELS = ["gemini-flash-latest"]
 CLAUDE_MODELS = ["claude-sonnet-4-20250514", "claude-3-7-sonnet-latest"]
 
-# Allowed Ajin Networks industrial domains. Safe-mode topics must map here.
 INDUSTRIAL_CATEGORY_KEYWORDS = {
     "물류자동화": [
         "AGV", "AMR", "물류로봇", "컨베이어", "소터", "자동창고", "AS/RS",
@@ -27,12 +27,13 @@ INDUSTRIAL_CATEGORY_KEYWORDS = {
     ],
     "딥러닝비전": [
         "비전검사", "머신비전", "딥러닝", "AI 검사", "불량검출", "결함검출",
-        "외관검사", "OCR", "3D비전", "AOI", "카메라", "조명", "검사자동화",
+        "외관검사", "OCR", "3D비전", "2D비전", "AOI", "카메라", "조명", "검사자동화",
     ],
     "공장자동화": [
         "공장자동화", "로봇자동화", "산업용 로봇", "협동로봇", "SCARA", "6축 로봇",
-        "포장자동화", "조립자동화", "용접자동화", "픽앤플레이스", "CNC", "엔드이펙터",
-        "그리퍼", "자동화 설비", "생산라인",
+        "포장자동화", "포장 자동화", "조립자동화", "조립 자동화", "용접자동화",
+        "픽앤플레이스", "CNC", "엔드이펙터", "그리퍼", "자동화 설비", "생산라인",
+        "병목 공정", "Cycle Time", "사이클타임",
     ],
     "스마트팩토리": [
         "스마트팩토리", "MES", "OEE", "예지보전", "디지털트윈", "IIoT", "엣지AI",
@@ -54,7 +55,6 @@ INDUSTRIAL_CATEGORY_KEYWORDS = {
     ],
 }
 
-# Explicitly reject common non-industrial trend classes even when they contain a generic word like AI.
 NON_INDUSTRIAL_BLOCKLIST = [
     "연예", "배우", "가수", "아이돌", "드라마", "영화", "예능", "스포츠", "야구", "축구",
     "게임", "웹툰", "정년", "퇴직", "사원", "채용", "연봉", "부동산", "주식", "코인",
@@ -63,7 +63,6 @@ NON_INDUSTRIAL_BLOCKLIST = [
     "다이어트", "날씨", "태풍", "최애", "팬", "콘서트",
 ]
 
-# Vetted fallback topics. These are intentionally specific enough to generate useful B2B technical posts.
 SAFE_TOPIC_POOL = {
     "물류자동화": [
         "AGV·AMR 도입 전 동선·충전·교통제어 설계 기준",
@@ -152,32 +151,51 @@ def _extract_trend_keywords(prompt: str) -> list[str]:
     return keywords
 
 
+def _normalize_text(text: str) -> str:
+    """Normalize punctuation/spacing so industrial compound terms match reliably."""
+    text = unicodedata.normalize("NFKC", text or "").lower()
+    text = re.sub(r"[·•・/\\|,;:_+\-–—()\[\]{}]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _compact_text(text: str) -> str:
+    return re.sub(r"\s+", "", _normalize_text(text))
+
+
 def _contains_blocked_term(text: str) -> bool:
-    lowered = text.lower()
-    return any(term.lower() in lowered for term in NON_INDUSTRIAL_BLOCKLIST)
+    normalized = _normalize_text(text)
+    compact = _compact_text(text)
+    for term in NON_INDUSTRIAL_BLOCKLIST:
+        term_n = _normalize_text(term)
+        if term_n in normalized or _compact_text(term) in compact:
+            return True
+    return False
 
 
 def _industrial_score(text: str) -> tuple[int, str | None]:
     """Return (score, best_category). Minimum safe acceptance score is 2."""
-    lowered = text.lower()
     if _contains_blocked_term(text):
         return -100, None
 
+    normalized = _normalize_text(text)
+    compact = _compact_text(text)
     best_score = 0
     best_category = None
+
     for category, keywords in INDUSTRIAL_CATEGORY_KEYWORDS.items():
         score = 0
         for keyword in keywords:
-            if keyword.lower() in lowered:
-                # Specific industrial phrases receive stronger weight.
-                score += 2 if len(keyword) >= 3 else 1
+            key_n = _normalize_text(keyword)
+            key_c = _compact_text(keyword)
+            if (key_n and key_n in normalized) or (key_c and key_c in compact):
+                score += 2 if len(key_c) >= 3 else 1
         if score > best_score:
             best_score = score
             best_category = category
 
-    # Generic manufacturing context can raise a borderline industrial term, but can never rescue blocked content.
     context_terms = ["제조", "생산", "공정", "설비", "자동화", "로봇", "검사", "제어", "산업"]
-    context_hits = sum(1 for term in context_terms if term in lowered)
+    context_hits = sum(1 for term in context_terms if _compact_text(term) in compact)
     if best_score > 0:
         best_score += min(context_hits, 2)
 
@@ -203,7 +221,6 @@ def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
         else:
             logger.warning("[SAFE-MODE] trend rejected: '%s' (industrial_score=%s)", keyword, score)
 
-    # Highest industrial relevance first; never use an unqualified trend.
     candidates.sort(key=lambda item: item[0], reverse=True)
     selected = []
     seen = set()
@@ -221,11 +238,14 @@ def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
         if len(selected) >= top_n:
             break
 
-    # Fill all missing slots only from vetted Ajin industrial seed topics.
     pool_order = [priority] + [c for c in SAFE_TOPIC_POOL if c != priority]
     for category in pool_order:
         for keyword in SAFE_TOPIC_POOL[category]:
             if keyword in seen:
+                continue
+            score, detected = _industrial_score(keyword)
+            if score < 2 or not detected:
+                logger.error("[SAFE-MODE] vetted seed failed industrial gate: '%s' score=%s", keyword, score)
                 continue
             selected.append({
                 "keyword": keyword,
@@ -238,6 +258,8 @@ def _select_industrial_topics(prompt: str, top_n: int = 3) -> list[dict]:
             if len(selected) >= top_n:
                 return selected
 
+    if len(selected) < top_n:
+        raise RuntimeError(f"Safe topic pool could not supply {top_n} validated industrial topics")
     return selected[:top_n]
 
 
@@ -275,51 +297,40 @@ def _rule_based(prompt: str) -> str:
         keyword_match = re.search(r"키워드:\s*(.+)", prompt)
         keyword = keyword_match.group(1).strip() if keyword_match else "산업용 로봇 자동화"
         score, detected_category = _industrial_score(keyword)
-        if score < 2:
-            logger.error("[SAFE-MODE] blocked non-industrial writer topic: '%s'", keyword)
-            keyword = SAFE_TOPIC_POOL["공장자동화"][0]
+        if score < 2 or not detected_category:
+            logger.warning("[SAFE-MODE] writer rejected non-industrial keyword '%s' -> safe replacement", keyword)
             detected_category = "공장자동화"
+            keyword = SAFE_TOPIC_POOL[detected_category][0]
 
-        category = detected_category if detected_category in SAFE_TOPIC_POOL else "공장자동화"
-        title = f"{keyword} 설계 기준 - 아진네트웍스"
-        if len(title) > 40:
-            title = f"{category} 실무 설계 기준 - 아진네트웍스"
-
+        title = f"{keyword} — 아진네트웍스 기술 가이드"[:60]
         content = (
             f"# {keyword}\n\n"
-            "## 1. 도입 목적\n"
-            f"{keyword} 검토의 출발점은 단순한 설비 교체가 아니라 현재 공정의 병목과 작업자 개입 구간을 수치로 확인하는 것입니다. "
-            "현행 Cycle Time, 목표 Takt Time, 생산량, 불량률, 작업 인원, 설비 가동률을 먼저 계측해야 합니다.\n\n"
-            "## 2. 기구 설계 검토\n"
-            "제품 중량과 형상, 반복정밀도, 가속도, Payload와 Moment, 그리퍼 또는 지그의 파지 안정성, 유지보수 접근성을 검토합니다. "
-            "로봇 적용 시 제조사 허용하중과 EOAT 중량을 합산하고 최악 조건에서의 관성모멘트를 확인해야 합니다.\n\n"
-            "## 3. 제어 및 통신\n"
-            "PLC, 로봇 컨트롤러, 비전, 안전PLC, 인버터와 서보 간 I/O 및 산업용 Ethernet 인터페이스를 정의합니다. "
-            "자동운전, 수동운전, 원점복귀, 알람복귀, 제품 변경, 통신 단절 시 Fail-safe 상태를 사전에 설계해야 합니다.\n\n"
-            "## 4. 안전과 품질\n"
-            "안전펜스, 인터록, 비상정지, 라이트커튼 또는 스캐너의 위험원 분석이 필요합니다. "
-            "검사 공정은 PASS/FAIL 판정 기준과 기준샘플, 재검 로직, 데이터 저장 조건을 명확하게 정의합니다.\n\n"
-            "## 5. Cycle Time과 생산성\n"
-            "자동화 전후의 작업 분해표를 작성하고 로봇 이동, 파지, 검사, 이송, 대기 시간을 분리 계측합니다. "
-            "평균값만 사용하지 말고 최대 Cycle Time과 공정 변동성을 함께 검토해야 실제 양산 CAPA를 보수적으로 산정할 수 있습니다.\n\n"
-            "## 6. PoC와 투자검토\n"
-            "본설비 제작 전에 핵심 불확실성이 큰 공정은 PoC로 검증하는 것이 안전합니다. 반복정밀도, 제품 손상, 인식률, Cycle Time, "
-            "복구성 및 작업자 개입 빈도를 시험하고, 검증된 데이터로 CAPEX와 ROI를 산정해야 합니다.\n\n"
-            "아진네트웍스는 기구·제어·로봇·비전·검사 인터페이스를 하나의 시스템으로 검토하여 현장 적용 가능성과 리스크를 구분합니다."
+            f"{keyword}를 검토할 때는 단순 장비 선정이 아니라 공정 데이터와 기구·제어 인터페이스를 함께 분석해야 합니다.\n\n"
+            "## 1. 현행 공정 계측\n"
+            "작업 순서, Cycle Time, 대기시간, 작업자 개입, 불량 발생 구간을 실측하고 병목을 분리합니다.\n\n"
+            "## 2. 기구 및 로봇 검토\n"
+            "Payload, Reach, Moment, 반복정밀도, EOAT, 제품 공차와 비정상 상태에서의 Fail-safe 조건을 확인합니다.\n\n"
+            "## 3. PLC·비전·상위시스템 연동\n"
+            "I/O, 산업통신, 인터록, 알람, 좌표계, 데이터 추적성을 정의하고 복구 시퀀스를 사전에 설계합니다.\n\n"
+            "## 4. 안전 및 PoC\n"
+            "위험성 평가 후 안전회로를 구성하고 PoC에서 실제 Cycle Time, 반복성, 오검·미검, 가동률을 검증합니다.\n\n"
+            "## 5. 투자 판단\n"
+            "자동화 전후 인원, 생산량, 불량률, 다운타임, 유지보수 비용을 동일 기준으로 비교해 ROI를 산정합니다.\n\n"
+            "아진네트웍스는 로봇·PLC·비전·기구를 통합 관점에서 검토하며, 확인값과 추정값을 구분해 기술 제안에 반영합니다."
         )
         return json.dumps({
             "title": title,
             "content": content,
-            "category": category,
-            "tags": [category, "자동화설비", "아진네트웍스"],
-            "meta_description": f"{keyword}의 기구·제어·Cycle Time·안전·PoC 설계 기준을 아진네트웍스 관점에서 정리합니다.",
+            "category": detected_category,
+            "tags": [keyword, detected_category, "산업자동화", "아진네트웍스"],
+            "meta_description": f"{keyword}의 공정분석, 기구·PLC·비전 연동, 안전, PoC, ROI 검토 기준을 아진네트웍스가 설명합니다.",
         }, ensure_ascii=False)
 
     raise RuntimeError("Deterministic fallback has no compatible response for this prompt")
 
 
 def get_llm_response(prompt: str) -> str:
-    """Try Gemini, then Claude, then Ajin industrial deterministic safe-mode."""
+    """Try Gemini, then Claude, then Ajin industrial deterministic safe mode."""
     errors = []
     try:
         return _gemini(prompt)
@@ -337,4 +348,4 @@ def get_llm_response(prompt: str) -> str:
     except Exception as exc:
         errors.append(str(exc))
 
-    raise RuntimeError("All LLM providers and deterministic fallback failed: " + " | ".join(errors))
+    raise RuntimeError("All LLM providers and Ajin safe-mode failed: " + " | ".join(errors))
