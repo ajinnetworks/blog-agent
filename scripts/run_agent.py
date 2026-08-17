@@ -1,14 +1,6 @@
 """
 run_agent.py — 블로그 자동화 에이전트 메인 진입점
 Goal → Work → Result 3-tier 오케스트레이션
-
-사용법:
-  python scripts/run_agent.py --mode once                          # GitHub Pages 즉시 발행
-  python scripts/run_agent.py --mode dry-run                       # 발행 없이 초안만
-  python scripts/run_agent.py --mode trend-only                    # 트렌드 수집만
-  python scripts/run_agent.py --mode write-only --topic "AI 자동화" # 특정 주제 초안
-  python scripts/run_agent.py --mode init-repo                     # GitHub 레포 초기화
-  python scripts/run_agent.py --mode once --platform wordpress      # WordPress 발행
 """
 
 import argparse
@@ -21,13 +13,9 @@ from datetime import datetime
 from pathlib import Path
 
 if sys.stdout.encoding != 'utf-8':
-    sys.stdout = io.TextIOWrapper(
-        sys.stdout.buffer, encoding='utf-8', errors='replace'
-    )
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 if sys.stderr.encoding != 'utf-8':
-    sys.stderr = io.TextIOWrapper(
-        sys.stderr.buffer, encoding='utf-8', errors='replace'
-    )
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 from dotenv import load_dotenv
 
@@ -36,7 +24,10 @@ sys.path.insert(0, str(ROOT))
 
 from agents.trend_agent import run_trend_agent
 from agents.writer_agent import run_writer_agent
+from agents.content_enricher import enrich_posts
 from agents.reviewer_agent import run_reviewer_agent
+from agents.content_quality import apply_final_content_gate
+from agents.image_selector import assign_batch_images
 from agents.publisher_agent import run_publisher_agent
 from agents.github_publisher import run_github_publisher, init_github_repo, get_github_config
 
@@ -51,10 +42,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(
-            _log_dir / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
-            encoding="utf-8",
-        ),
+        logging.FileHandler(_log_dir / f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log", encoding="utf-8"),
     ],
 )
 logger = logging.getLogger("run_agent")
@@ -75,11 +63,7 @@ def validate_env(platform: str = "github") -> bool:
     return True
 
 
-def run_full_pipeline(
-    dry_run: bool = False,
-    topic_override: str = None,
-    platform: str = "github",
-) -> dict:
+def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platform: str = "github") -> dict:
     start_time = datetime.now()
     platform_label = {"github": "GitHub Pages", "wordpress": "WordPress"}.get(platform, platform)
 
@@ -90,7 +74,6 @@ def run_full_pipeline(
 
     result_summary = {"run_at": start_time.isoformat(), "platform": platform, "dry_run": dry_run, "stages": {}}
 
-    # STAGE 1: 트렌드 수집
     logger.info("\n[STAGE 1] 트렌드 수집 & 주제 선정")
     if topic_override:
         topics = [{"keyword": topic_override, "angle": f"{topic_override} 실용 분석", "reason": "수동 지정", "estimated_search_volume": "unknown"}]
@@ -99,12 +82,16 @@ def run_full_pipeline(
     result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}
     logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")
 
-    # STAGE 2: 작성
     logger.info("\n[STAGE 2] 포스트 작성")
     posts = run_writer_agent(topics)
-    result_summary["stages"]["writer"] = {"attempted": len(topics), "succeeded": sum(1 for p in posts if not p.get("error"))}
+    posts = enrich_posts(posts)
+    result_summary["stages"]["writer"] = {
+        "attempted": len(topics),
+        "succeeded": sum(1 for p in posts if not p.get("error")),
+        "enriched": sum(1 for p in posts if p.get("content_enriched")),
+    }
+    logger.info(f"기술본문 보강: {result_summary['stages']['writer']['enriched']}개")
 
-    # STAGE 3: 검수
     logger.info("\n[STAGE 3] 품질 검수")
     reviewed_posts = run_reviewer_agent(posts)
     passed = [p for p in reviewed_posts if p.get("review_result", {}).get("pass")]
@@ -114,10 +101,30 @@ def run_full_pipeline(
         "scores": [p.get("review_result", {}).get("total_score") for p in reviewed_posts],
     }
 
-    # STAGE 4: 발행 (dry_run=True 이면 github_publisher 내부에서 커밋 차단)
-    logger.info(f"\n[STAGE 4] 발행 → {platform_label}" + (" [DRY-RUN]" if dry_run else ""))
+    logger.info("\n[STAGE 4] 이미지 배정 & Final Content Gate")
+    reviewed_posts = assign_batch_images(reviewed_posts)
+    reviewed_posts = apply_final_content_gate(reviewed_posts)
+    final_ready = [p for p in reviewed_posts if p.get("final_quality", {}).get("pass")]
+    for post in reviewed_posts:
+        fq = post.get("final_quality", {})
+        if fq.get("pass"):
+            logger.info(
+                "[FINAL-GATE] PASS: '%s' | %s자 | 기술어 %s개 | image=%s",
+                post.get("title"), fq.get("content_chars"), len(fq.get("technical_hits", [])), post.get("image")
+            )
+        else:
+            logger.warning("[FINAL-GATE] FAIL: '%s' | %s", post.get("title"), fq.get("issues"))
+
+    result_summary["stages"]["final_quality"] = {
+        "total": len(reviewed_posts),
+        "passed": len(final_ready),
+        "images": [p.get("image") for p in final_ready],
+        "issues": {p.get("title", "N/A"): p.get("final_quality", {}).get("issues", []) for p in reviewed_posts if not p.get("final_quality", {}).get("pass")},
+    }
+
+    logger.info(f"\n[STAGE 5] 발행 → {platform_label}" + (" [DRY-RUN]" if dry_run else ""))
     if platform == "github":
-        publish_results = run_github_publisher(reviewed_posts, dry_run=dry_run)
+        publish_results = run_github_publisher(final_ready, dry_run=dry_run)
         result_summary["stages"]["publisher"] = {
             "platform": "github_pages",
             "dry_run": dry_run,
@@ -127,7 +134,7 @@ def run_full_pipeline(
             "blog_url": next((r.get("blog_url") for r in publish_results if r.get("blog_url") and r.get("blog_url") != "(dry-run)"), None),
         }
     else:
-        publish_results = run_publisher_agent(reviewed_posts)
+        publish_results = run_publisher_agent(final_ready)
         result_summary["stages"]["publisher"] = {
             "platform": platform,
             "dry_run": dry_run,
@@ -144,7 +151,8 @@ def run_full_pipeline(
     logger.info(f"  플랫폼: {platform_label}")
     logger.info(f"  주제: {result_summary['stages']['trend']['count']}개")
     logger.info(f"  작성: {result_summary['stages']['writer']['succeeded']}개")
-    logger.info(f"  합격: {result_summary['stages']['reviewer']['passed']}개")
+    logger.info(f"  Reviewer 합격: {result_summary['stages']['reviewer']['passed']}개")
+    logger.info(f"  Final Gate 합격: {result_summary['stages']['final_quality']['passed']}개")
     pub = result_summary["stages"].get("publisher", {})
     label = "[DRY-RUN] 커밋 차단" if dry_run else "발행"
     logger.info(f"  {label}: {pub.get('published', 0)}개")
@@ -173,10 +181,10 @@ def main():
             success = init_github_repo(cfg, dry_run=False)
             if success:
                 username = cfg["repo_name"].split("/")[0]
-                print(f"\n✅ 초기화 완료: https://github.com/{cfg['repo_name']}")
-                print(f"   블로그 URL : https://{username}.github.io")
+                print(f"\n초기화 완료: https://github.com/{cfg['repo_name']}")
+                print(f"블로그 URL : https://{username}.github.io")
             else:
-                print("❌ 초기화 실패 — 로그 확인")
+                print("초기화 실패 — 로그 확인")
         except EnvironmentError as e:
             logger.error(str(e))
             sys.exit(1)
