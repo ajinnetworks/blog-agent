@@ -11,7 +11,13 @@ from agents.llm_fallback import (
     _short_safe_title,
 )
 from agents.writer_agent import _normalize_title
-from agents.runtime_guard import clean_title_boundary, disable_provider, provider_disabled
+from agents.runtime_guard import (
+    clean_title_boundary,
+    disable_provider,
+    provider_disabled,
+    all_llm_providers_disabled,
+    make_safe_mode_seo_title,
+)
 from agents import reviewer_agent
 
 
@@ -75,10 +81,20 @@ def test_runtime_guards() -> None:
     assert len(cleaned) <= 40, cleaned
     assert not cleaned.endswith("Fa"), cleaned
 
+    seo_title = make_safe_mode_seo_title("OEE 기반 설비 병목 분석과 자동화 투자 우선순위 선정")
+    assert len(seo_title) <= 40, seo_title
+    assert "도입 전" in seo_title, seo_title
+    assert seo_title.count("아진네트웍스") == 1, seo_title
+
+    existing_pattern = make_safe_mode_seo_title("산업용 로봇 자동화 도입 전 Cycle Time 검토")
+    assert "도입 전" in existing_pattern, existing_pattern
+    assert len(existing_pattern) <= 40, existing_pattern
+
     disable_provider("gemini")
     disable_provider("claude")
     assert provider_disabled("gemini") is True
     assert provider_disabled("claude") is True
+    assert all_llm_providers_disabled() is True
 
 
 def main() -> None:
@@ -142,7 +158,7 @@ def main() -> None:
     print("All selected/fallback topics pass industrial gate")
     print("Writer titles are guaranteed <= 40 characters")
     print("Reviewer revised post and pass status persist into final output")
-    print("Provider hard-failure circuits and title boundary cleanup are covered")
+    print("Provider circuits, RPM wait guard and SEO-safe title pattern are covered")
 
 
 if __name__ == "__main__":
