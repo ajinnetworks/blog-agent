@@ -192,13 +192,12 @@ def filter_recent_topics(topics: list[dict], recent_titles: list[str] | None = N
 
 def _rotation_start(now: datetime | None = None) -> int:
     now = now or datetime.now(KST)
-    # Tuesday/Thursday/Saturday scheduled runs naturally advance across the pool.
     return (now.toordinal() + now.isocalendar().week) % len(CATEGORY_ORDER)
 
 
 def refill_topics(accepted: list[dict], recent_titles: list[str], target_count: int = 3,
                   threshold: float = 0.62, now: datetime | None = None) -> list[dict]:
-    """Fill rejected slots with category-balanced, non-duplicate vetted topics."""
+    """Fill rejected slots round-robin across categories with non-duplicate vetted topics."""
     result = list(accepted)
     if len(result) >= target_count:
         return result[:target_count]
@@ -206,23 +205,40 @@ def refill_topics(accepted: list[dict], recent_titles: list[str], target_count: 
     start = _rotation_start(now)
     categories = CATEGORY_ORDER[start:] + CATEGORY_ORDER[:start]
     existing_titles = list(recent_titles) + [x.get("keyword", "") for x in result]
+    selected_index = {category: 0 for category in categories}
 
-    for category in categories:
-        for keyword in PHASE3_TOPIC_POOL.get(category, []):
-            best = max((topic_similarity(keyword, old) for old in existing_titles), default=0.0)
-            if best >= threshold:
+    # Each pass selects at most one topic per category. This prevents a single
+    # category from consuming every refill slot while preserving deterministic order.
+    while len(result) < target_count:
+        added_this_pass = False
+        for category in categories:
+            pool = PHASE3_TOPIC_POOL.get(category, [])
+            idx = selected_index[category]
+            chosen = None
+            while idx < len(pool):
+                keyword = pool[idx]
+                idx += 1
+                best = max((topic_similarity(keyword, old) for old in existing_titles), default=0.0)
+                if best < threshold:
+                    chosen = keyword
+                    break
+            selected_index[category] = idx
+            if not chosen:
                 continue
             result.append({
-                "keyword": keyword,
+                "keyword": chosen,
                 "category": category,
-                "angle": f"{keyword}를 기구·제어·Cycle Time·안전·PoC·ROI 관점에서 설명",
+                "angle": f"{chosen}를 기구·제어·Cycle Time·안전·PoC·ROI 관점에서 설명",
                 "reason": "Phase 3 category rotation refill",
                 "estimated_search_volume": "medium",
             })
-            existing_titles.append(keyword)
-            logger.info("[TOPIC-ROTATION] refill: %s -> %s", category, keyword)
+            existing_titles.append(chosen)
+            added_this_pass = True
+            logger.info("[TOPIC-ROTATION] refill: %s -> %s", category, chosen)
             if len(result) >= target_count:
                 return result
+        if not added_this_pass:
+            break
     return result
 
 
