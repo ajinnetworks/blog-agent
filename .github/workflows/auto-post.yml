@@ -75,9 +75,7 @@ jobs:
               )
               if 'from agents.llm_fallback import get_llm_response as _shared_llm_response' not in text:
                   text = text.replace(marker, injection, 1)
-              # Rename the local implementation so all existing call sites use the shared fallback.
               text = text.replace('def get_gemini_response(prompt: str) -> str:', 'def _legacy_get_gemini_response(prompt: str) -> str:', 1)
-              # Insert compatibility wrapper before load_config or first major section.
               anchor = '\ndef load_config() -> dict:'
               wrapper = '\ndef get_gemini_response(prompt: str) -> str:\n    return _shared_llm_response(prompt)\n\n'
               if wrapper.strip() not in text:
@@ -90,6 +88,10 @@ jobs:
         run: |
           grep -R "llm_fallback" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
           python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
+
+      - name: Enforce Ajin industrial safe-mode
+        run: |
+          python scripts/test_safe_mode.py
 
       - name: Generate and publish blog post
         run: |
