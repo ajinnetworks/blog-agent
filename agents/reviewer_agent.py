@@ -62,16 +62,15 @@ def retry_on_rate_limit(max_retries: int = 3, wait_seconds: int = 60):
     return decorator
 
 
-# 모델 우선순위 (한도 초과 시 자동 전환)
 GEMINI_MODELS = [
-    "gemini-2.0-flash",       # 1순위
-    "gemini-2.0-flash-lite",  # 2순위 (경량, 429 대비)
-    "gemini-flash-latest",    # 3순위 (최신 alias)
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-flash-latest",
 ]
 
 
 def get_gemini_response(prompt: str) -> str:
-    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환. 전체 실패 시 60초 대기 후 1회 재시도."""
+    """GEMINI_MODELS 순서대로 시도, 429/404 시 다음 모델로 전환."""
     client = google_genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     for retry in range(2):
         for model_name in GEMINI_MODELS:
@@ -98,19 +97,16 @@ def load_config() -> dict:
 
 
 def validate_title(title: str) -> dict:
-    """제목 SEO 규칙 검증. errors → 점수 차감, warnings → 경고만."""
+    """제목 SEO 규칙 검증. errors는 하드 실패, warnings는 정보성 경고."""
     errors = []
     warnings = []
 
     if len(title) > 40:
         errors.append(f"제목 {len(title)}자 초과 (허용: 40자)")
-
     if title.startswith("아진네트웍스"):
         errors.append("브랜드명으로 제목 시작 금지")
-
     if "아진네트웍스" not in title:
         warnings.append("아진네트웍스 미포함 — 브랜드 노출 약화")
-
     if title.count("아진네트웍스") >= 2:
         errors.append("아진네트웍스 중복 포함")
 
@@ -137,17 +133,10 @@ JSON으로만 응답: {{"score": 점수, "pass": true/false, "reason": "한줄�
 
 @retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
-    """
-    여러 포스트를 1회 Gemini 호출로 일괄 검수.
-    Returns: 각 포스트에 대한 review_result 리스트
-    """
     items = []
     for i, post in enumerate(posts):
         content_raw = post.get("content", "")
-        if isinstance(content_raw, list):
-            content_str = " ".join(str(c) for c in content_raw)
-        else:
-            content_str = str(content_raw)
+        content_str = " ".join(str(c) for c in content_raw) if isinstance(content_raw, list) else str(content_raw)
         items.append(
             f"[포스트 {i+1}] 제목: {post.get('title', '')}\n"
             f"본문 앞 400자:\n{content_str[:400]}"
@@ -185,18 +174,14 @@ def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
 
     reviews = []
     for i, post in enumerate(posts):
-        r = next((x for x in results if x.get("index") == i+1), None)
-        if r is None:
-            r = {"score": 0, "pass": False, "reason": "결과 없음"}
+        r = next((x for x in results if x.get("index") == i+1), None) or {"score": 0, "pass": False, "reason": "결과 없음"}
         score = r.get("score", 0)
-
-        # 제목 검증 — 오류당 -10점, 경고당 -5점
         title_check = validate_title(post.get("title", ""))
         if not title_check["passed"]:
             logger.warning(f"제목 검증 실패: {title_check['errors']}")
             score -= 10 * len(title_check["errors"])
         if title_check["warnings"]:
-            score -= 5 * len(title_check["warnings"])
+            logger.warning(f"제목 경고: {title_check['warnings']}")
         score = max(0, score)
 
         passed = score >= min_score
@@ -211,28 +196,18 @@ def batch_review_posts(posts: list[dict], min_score: int) -> list[dict]:
             "revision_notes": r.get("reason", ""),
             "title_check": title_check,
         })
-        status = "합격" if passed else "불합격"
-        logger.info(f"[{i+1}/{len(posts)}] '{post.get('title', '')}' {status} ({score}/{min_score})")
+        logger.info(f"[{i+1}/{len(posts)}] '{post.get('title', '')}' {'합격' if passed else '불합격'} ({score}/{min_score})")
     return reviews
 
 
 @retry_on_rate_limit(max_retries=3, wait_seconds=60)
 def review_post(post: dict) -> dict:
-    """
-    단일 포스트 검수 (배치가 불가한 경우 폴백용).
-    Returns: review_result dict { total_score, breakdown, issues, pass, revision_notes }
-    """
     config = load_config()
     min_score = config["reviewer"]["min_score"]
-
     content_raw = post.get("content", "")
-    if isinstance(content_raw, list):
-        content_str = " ".join(str(c) for c in content_raw)
-    else:
-        content_str = str(content_raw)
+    content_str = " ".join(str(c) for c in content_raw) if isinstance(content_raw, list) else str(content_raw)
 
-    prompt = REVIEW_PROMPT_SIMPLE.format(content=content_str[:500])
-    raw = get_gemini_response(prompt)
+    raw = get_gemini_response(REVIEW_PROMPT_SIMPLE.format(content=content_str[:500]))
     if "```" in raw:
         parts = raw.split("```")
         for part in parts:
@@ -246,8 +221,6 @@ def review_post(post: dict) -> dict:
     try:
         r = json.loads(raw)
         score = r.get("score", 0)
-
-        # 제목 검증 — 오류당 -10점, 경고당 -5점
         title_check = validate_title(post.get("title", ""))
         if not title_check["passed"]:
             logger.warning(f"제목 검증 실패: {title_check['errors']}")
@@ -256,9 +229,7 @@ def review_post(post: dict) -> dict:
             logger.info(f"제목 검증 통과: {title_check['length']}자")
         if title_check["warnings"]:
             logger.warning(f"제목 경고: {title_check['warnings']}")
-            score -= 5 * len(title_check["warnings"])
         score = max(0, score)
-
         passed = score >= min_score
         issues = [] if passed else [{"severity": "medium", "description": r.get("reason", "")}]
         issues += [{"severity": "high", "description": e} for e in title_check["errors"]]
@@ -272,7 +243,6 @@ def review_post(post: dict) -> dict:
             "title_check": title_check,
         }
     except json.JSONDecodeError as e:
-        logger.error(f"검수 결과 JSON 파싱 실패: {e}")
         review = {
             "total_score": 0,
             "breakdown": {},
@@ -282,23 +252,12 @@ def review_post(post: dict) -> dict:
             "revision_notes": "검수 에이전트 오류 - 수동 확인 필요",
         }
 
-    status = "합격" if review["pass"] else "불합격"
-    logger.info(f"검수 결과: {status} | 점수: {review['total_score']}/{min_score}")
+    logger.info(f"검수 결과: {'합격' if review['pass'] else '불합격'} | 점수: {review['total_score']}/{min_score}")
     return review
 
 
 def revise_post(post: dict, review: dict) -> dict:
-    """
-    검수 불합격 시 개선 지시를 바탕으로 포스트 재작성.
-    최대 2회 재시도 (무한 루프 방지).
-    """
-    config = load_config()
-
-    issues_text = "\n".join(
-        [f"- [{i['severity']}] {i['description']}"
-         for i in review.get("issues", [])]
-    )
-
+    issues_text = "\n".join([f"- [{i['severity']}] {i['description']}" for i in review.get("issues", [])])
     prompt = f"""
 아래 블로그 포스트를 검수 결과에 따라 개선하세요.
 
@@ -311,7 +270,6 @@ def revise_post(post: dict, review: dict) -> dict:
 
 개선된 포스트를 동일한 JSON 형식으로 반환:
 """
-
     raw = get_gemini_response(prompt)
     if "```" in raw:
         parts = raw.split("```")
@@ -322,10 +280,11 @@ def revise_post(post: dict, review: dict) -> dict:
             if part.startswith("{"):
                 raw = part
                 break
-
     try:
         revised = json.loads(raw)
         revised["source_topic"] = post.get("source_topic", {})
+        revised["draft_path"] = post.get("draft_path")
+        revised["generated_at"] = post.get("generated_at")
         revised["revised"] = True
         logger.info("재작성 완료")
         return revised
@@ -335,21 +294,12 @@ def revise_post(post: dict, review: dict) -> dict:
 
 
 def run_reviewer_agent(posts: list[dict], max_revisions: int = 1) -> list[dict]:
-    """
-    포스트 리스트 전체 검수.
-    - 정상 포스트: 배치 1회 Gemini 호출로 일괄 검수 (API 호출 최소화)
-    - 불합격 포스트: 재작성 후 단일 검수 1회 (최대 max_revisions회)
-    Returns: 검수 완료된 포스트 리스트 (review_result 포함)
-    """
     logger.info(f"=== Reviewer Agent 시작: {len(posts)}개 포스트 ===")
     config = load_config()
     min_score = config["reviewer"]["min_score"]
-
-    # 오류 포스트 분리
     error_posts = [p for p in posts if p.get("error")]
     valid_posts = [p for p in posts if not p.get("error")]
 
-    # 배치 검수 (1회 Gemini 호출)
     if valid_posts:
         logger.info(f"배치 검수: {len(valid_posts)}개 포스트 -> 1회 API 호출")
         try:
@@ -369,20 +319,21 @@ def run_reviewer_agent(posts: list[dict], max_revisions: int = 1) -> list[dict]:
                     "revision_notes": f"API 한도 초과로 검수 생략: {e}",
                 }
 
-    # 불합격 포스트 재작성 (최대 max_revisions회, 단일 검수)
-    for post in valid_posts:
-        if post.get("review_result", {}).get("pass"):
+    # IMPORTANT: replace the element in valid_posts after revision so the new title/content/review persist.
+    for idx, original_post in enumerate(valid_posts):
+        if original_post.get("review_result", {}).get("pass"):
             continue
+        current_post = original_post
         for attempt in range(1, max_revisions + 1):
-            logger.info(f"재작성 시도 {attempt}/{max_revisions}: '{post.get('title')}'")
-            post = revise_post(post, post["review_result"])
-            review = review_post(post)
-            post["review_result"] = review
-            if review["pass"]:
+            logger.info(f"재작성 시도 {attempt}/{max_revisions}: '{current_post.get('title')}'")
+            current_post = revise_post(current_post, current_post["review_result"])
+            current_post["review_result"] = review_post(current_post)
+            if current_post["review_result"]["pass"]:
                 break
-        else:
-            logger.warning(f"최대 재시도 초과 - '{post.get('title')}' 강제 통과")
-            post["review_result"]["forced_pass"] = True
+        valid_posts[idx] = current_post
+        if not current_post.get("review_result", {}).get("pass"):
+            logger.warning(f"최대 재시도 초과 - '{current_post.get('title')}' 강제 통과")
+            current_post["review_result"]["forced_pass"] = True
 
     reviewed_posts = error_posts + valid_posts
     passed = sum(1 for p in reviewed_posts if p.get("review_result", {}).get("pass"))
