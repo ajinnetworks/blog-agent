@@ -25,7 +25,9 @@ accepted, rejected = filter_recent_topics(proposed, recent_titles=recent, thresh
 assert len(rejected) == 1, rejected
 assert "AGV" in rejected[0]["topic"]["keyword"], rejected
 assert len(accepted) == 2, accepted
-assert topic_similarity("자동창고 WMS PLC 인터페이스", recent[2]) >= 0.62
+# Near-duplicate wording must remain above the production threshold.
+assert topic_similarity("자동창고 입출고 병목을 줄이는 WMS 도입", recent[2]) >= 0.62
+# Unrelated vision content must stay below the threshold.
 assert topic_similarity("AI 비전검사 조명 렌즈 선정", recent[0]) < 0.62
 
 batch = [

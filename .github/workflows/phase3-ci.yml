@@ -1,0 +1,21 @@
+name: Phase 3 Regression
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install PyGithub
+      - name: Phase 3 topic guard tests
+        run: python -m scripts.test_recent_topic_guard
+      - name: Phase 3.1 tag policy tests
+        run: python -m scripts.test_tag_policy
+      - name: Compile policy modules
+        run: python -m py_compile agents/recent_topic_guard.py agents/tag_policy.py

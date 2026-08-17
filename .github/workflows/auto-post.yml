@@ -100,28 +100,37 @@ jobs:
           path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Enable Phase 3 topic guard and rotation
+      - name: Enable Phase 3 topic guard and Phase 3.1 tags
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('scripts/run_agent.py')
           text = path.read_text(encoding='utf-8')
           anchor = 'from agents.publisher_image_bridge import install as install_image_publisher'
-          imp = anchor + '\nfrom agents.recent_topic_guard import guard_and_refill_topics'
+          imports = anchor + '\nfrom agents.recent_topic_guard import guard_and_refill_topics\nfrom agents.tag_policy import normalize_posts_tags'
           if 'from agents.recent_topic_guard import guard_and_refill_topics' not in text:
-              text = text.replace(anchor, imp, 1)
+              text = text.replace(anchor, imports, 1)
+          elif 'from agents.tag_policy import normalize_posts_tags' not in text:
+              text = text.replace('from agents.recent_topic_guard import guard_and_refill_topics', 'from agents.recent_topic_guard import guard_and_refill_topics\nfrom agents.tag_policy import normalize_posts_tags', 1)
           old = '''    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
           new = '''    if not topic_override:\n        guard_days = int(os.environ.get("RECENT_TOPIC_DAYS", "60"))\n        guard_threshold = float(os.environ.get("RECENT_TOPIC_THRESHOLD", "0.62"))\n        topics, duplicate_topics = guard_and_refill_topics(topics, days=guard_days, threshold=guard_threshold, target_count=3)\n        result_summary["stages"]["recent_topic_guard"] = {\n            "days": guard_days, "threshold": guard_threshold,\n            "accepted": len(topics), "rejected": len(duplicate_topics),\n            "duplicates": duplicate_topics,\n        }\n        logger.info("[TOPIC-GUARD] final=%s rejected=%s", len(topics), len(duplicate_topics))\n    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
           if old not in text:
               raise SystemExit('run_agent trend block not found; refusing unsafe Phase 3 patch')
           text = text.replace(old, new, 1)
+          old_enrich = '    posts = enrich_posts(posts)'
+          new_enrich = '    posts = enrich_posts(posts)\n    posts = normalize_posts_tags(posts)'
+          if new_enrich not in text:
+              if old_enrich not in text:
+                  raise SystemExit('run_agent enrich block not found; refusing Phase 3.1 tag patch')
+              text = text.replace(old_enrich, new_enrich, 1)
           path.write_text(text, encoding='utf-8')
           PY
 
       - name: Validate runtime wiring
         run: |
           grep -R "guard_and_refill_topics" scripts/run_agent.py
-          python -m py_compile agents/llm_fallback.py agents/runtime_guard.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py agents/recent_topic_guard.py scripts/run_agent.py
+          grep -R "normalize_posts_tags" scripts/run_agent.py
+          python -m py_compile agents/llm_fallback.py agents/runtime_guard.py agents/tag_policy.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py agents/recent_topic_guard.py scripts/run_agent.py
 
       - name: Enforce Ajin industrial safe-mode
         run: python -m scripts.test_safe_mode
@@ -134,6 +143,9 @@ jobs:
 
       - name: Enforce Phase 3 duplicate protection and rotation
         run: python -m scripts.test_recent_topic_guard
+
+      - name: Enforce Phase 3.1 tag policy
+        run: python -m scripts.test_tag_policy
 
       - name: Generate and publish blog post
         run: |
