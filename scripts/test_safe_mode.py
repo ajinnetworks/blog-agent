@@ -1,15 +1,14 @@
-"""Regression tests for Ajin Networks industrial safe-mode.
-
-These tests intentionally include previously observed bad topics.
-The workflow must fail before publishing if any unrelated topic leaks through.
-"""
+"""Regression tests for Ajin Networks industrial safe-mode."""
 
 from agents.llm_fallback import (
     _industrial_score,
     _select_industrial_topics,
+    validate_selected_topics,
     NON_INDUSTRIAL_BLOCKLIST,
     SAFE_TOPIC_POOL,
+    _short_safe_title,
 )
+from agents.writer_agent import _normalize_title
 
 
 def assert_rejected(topic: str) -> None:
@@ -23,11 +22,9 @@ def assert_accepted(topic: str) -> None:
 
 
 def main() -> None:
-    # Actual bad topics observed in Run 32066326019.
     for topic in ["정년", "최애의 사원", "퇴직", "연예인 콘서트", "주식 전망", "여행 맛집"]:
         assert_rejected(topic)
 
-    # Representative Ajin Networks industrial topics must remain accepted.
     for topic in [
         "AGV AMR 물류자동화",
         "AI 비전검사 불량검출",
@@ -38,7 +35,6 @@ def main() -> None:
     ]:
         assert_accepted(topic)
 
-    # Simulate an all-bad trend feed. Output must be replaced entirely by vetted industrial seeds.
     prompt = '''
 오늘 우선 카테고리: 물류자동화
 현재 트렌드 목록:
@@ -56,15 +52,35 @@ def main() -> None:
         assert score >= 2 and category, f"Unsafe fallback topic: {item}"
         assert not any(blocked.lower() in keyword.lower() for blocked in NON_INDUSTRIAL_BLOCKLIST), item
 
-    # Every vetted seed itself must satisfy the industrial gate.
+    # LLM 200 OK but returns a contaminated topic: it must be rejected and replaced.
+    contaminated = [
+        {"keyword": "정년 퇴직 육안검사 딥러닝 비전 전환", "category": "딥러닝비전"},
+        {"keyword": "AMR 비전 기반 안전 구역 인식", "category": "물류자동화"},
+        {"keyword": "비정형 불량검출 딥러닝 비전 AI 솔루션", "category": "딥러닝비전"},
+    ]
+    cleaned = validate_selected_topics(contaminated, priority="딥러닝비전", top_n=3)
+    assert len(cleaned) == 3, cleaned
+    assert all("정년" not in x["keyword"] and "퇴직" not in x["keyword"] for x in cleaned), cleaned
+    for item in cleaned:
+        score, category = _industrial_score(item["keyword"])
+        assert score >= 2 and category, item
+
+    # Every vetted seed must satisfy the industrial gate.
     for category, topics in SAFE_TOPIC_POOL.items():
         for topic in topics:
             score, detected = _industrial_score(topic)
             assert score >= 2 and detected, f"Seed failed gate: {category} / {topic} / {score} / {detected}"
+            assert len(_short_safe_title(topic)) <= 40
+
+    # Writer must never return a >40-char title and empty title must be safe.
+    assert len(_normalize_title("산업용 로봇 자동화 도입 전 Cycle Time과 가동률 검토 방법 — 아진네트웍스 기술 가이드")) <= 40
+    assert _normalize_title("")
+    assert len(_normalize_title("")) <= 40
 
     print("SAFE-MODE REGRESSION TESTS: PASS")
-    print("Rejected bad topics: 정년, 최애의 사원, 퇴직, entertainment/finance/travel examples")
-    print("All-bad trend feed replaced with vetted Ajin industrial topics")
+    print("Blocked topics stay blocked even when LLM mixes them with industrial terms")
+    print("All selected/fallback topics pass industrial gate")
+    print("Writer titles are guaranteed <= 40 characters")
 
 
 if __name__ == "__main__":
