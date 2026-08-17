@@ -32,7 +32,7 @@ def evaluate_content_quality(post: dict) -> dict:
     content = _content_text(post)
     compact_len = len(re.sub(r"\s+", "", content))
     provider = _provider(post)
-    min_chars = MIN_DETERMINISTIC_CHARS if provider == "deterministic" else MIN_CONTENT_CHARS
+    min_chars = MIN_DETERMINISTIC_CHARS if provider.startswith("deterministic") else MIN_CONTENT_CHARS
 
     sections = len(re.findall(r"^##\s+", content, flags=re.MULTILINE))
     technical_hits = sorted({term for term in TECH_TERMS if term.lower() in content.lower()})
@@ -59,8 +59,11 @@ def evaluate_content_quality(post: dict) -> dict:
 
     for pattern in UNSUPPORTED_NUMBER_PATTERNS:
         for match in pattern.findall(content):
-            if "추측입니다" not in content[max(0, content.find(str(match)) - 80): content.find(str(match)) + 120]:
-                issues.append(f"근거/추정 표기 없는 정량 표현 의심: {match}")
+            match_text = str(match)
+            idx = content.find(match_text)
+            context = content[max(0, idx - 80): idx + 120] if idx >= 0 else ""
+            if "추측입니다" not in context:
+                issues.append(f"근거/추정 표기 없는 정량 표현 의심: {match_text}")
 
     return {
         "pass": not issues,
