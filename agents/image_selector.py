@@ -7,42 +7,15 @@ It avoids repeating the same hero inside one publishing batch whenever possible.
 import hashlib
 
 HERO_LIBRARY = {
-    "물류자동화": [
-        "/assets/img/hero/logistics.jpg",
-        "/assets/img/hero/factory.jpg",
-    ],
-    "딥러닝비전": [
-        "/assets/img/hero/vision.jpg",
-        "/assets/img/hero/smart.jpg",
-    ],
-    "비전검사": [
-        "/assets/img/hero/vision.jpg",
-        "/assets/img/hero/smart.jpg",
-    ],
-    "제어SW": [
-        "/assets/img/hero/control.jpg",
-        "/assets/img/hero/smart.jpg",
-    ],
-    "PLC제어": [
-        "/assets/img/hero/control.jpg",
-        "/assets/img/hero/smart.jpg",
-    ],
-    "스마트팩토리": [
-        "/assets/img/hero/smart.jpg",
-        "/assets/img/hero/factory.jpg",
-    ],
-    "공장자동화": [
-        "/assets/img/hero/factory.jpg",
-        "/assets/img/hero/control.jpg",
-    ],
-    "포장자동화": [
-        "/assets/img/hero/factory.jpg",
-        "/assets/img/hero/logistics.jpg",
-    ],
-    "로봇자동화": [
-        "/assets/img/hero/factory.jpg",
-        "/assets/img/hero/logistics.jpg",
-    ],
+    "물류자동화": ["/assets/img/hero/logistics.jpg", "/assets/img/hero/factory.jpg"],
+    "딥러닝비전": ["/assets/img/hero/vision.jpg", "/assets/img/hero/smart.jpg"],
+    "비전검사": ["/assets/img/hero/vision.jpg", "/assets/img/hero/smart.jpg"],
+    "제어SW": ["/assets/img/hero/control.jpg", "/assets/img/hero/smart.jpg"],
+    "PLC제어": ["/assets/img/hero/control.jpg", "/assets/img/hero/smart.jpg"],
+    "스마트팩토리": ["/assets/img/hero/smart.jpg", "/assets/img/hero/factory.jpg"],
+    "공장자동화": ["/assets/img/hero/factory.jpg", "/assets/img/hero/control.jpg"],
+    "포장자동화": ["/assets/img/hero/factory.jpg", "/assets/img/hero/logistics.jpg"],
+    "로봇자동화": ["/assets/img/hero/factory.jpg", "/assets/img/hero/logistics.jpg"],
 }
 
 ALL_HEROES = [
@@ -89,7 +62,13 @@ def assign_batch_images(posts: list[dict]) -> list[dict]:
 
         image = next((img for img in ordered if img not in used), ordered[0] if ordered else "/assets/img/og-default.png")
         used.add(image)
+        alt = build_image_alt(post)
         post["image"] = image
-        post["image_alt"] = build_image_alt(post)
+        post["image_alt"] = alt
         post["image_strategy"] = "topic-aware-curated-hero"
+
+        content = str(post.get("content") or "")
+        image_md = f"![{alt}]({image})"
+        if image not in content:
+            post["content"] = image_md + "\n\n" + content
     return posts
