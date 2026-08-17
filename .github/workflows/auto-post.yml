@@ -57,7 +57,7 @@ jobs:
           PYTHONIOENCODING=utf-8
           EOF
 
-      - name: Patch deprecated Gemini model IDs
+      - name: Enable multi-provider LLM fallback
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -66,25 +66,30 @@ jobs:
               Path('agents/writer_agent.py'),
               Path('agents/reviewer_agent.py'),
           ]
-          replacements = {
-              'gemini-2.0-flash-lite': 'gemini-2.5-flash-lite',
-              'gemini-2.0-flash': 'gemini-2.5-flash',
-          }
           for path in files:
               text = path.read_text(encoding='utf-8')
-              for old, new in replacements.items():
-                  text = text.replace(old, new)
+              marker = 'logger = logging.getLogger(__name__)'
+              injection = (
+                  marker
+                  + '\n\nfrom agents.llm_fallback import get_llm_response as _shared_llm_response\n'
+              )
+              if 'from agents.llm_fallback import get_llm_response as _shared_llm_response' not in text:
+                  text = text.replace(marker, injection, 1)
+              # Rename the local implementation so all existing call sites use the shared fallback.
+              text = text.replace('def get_gemini_response(prompt: str) -> str:', 'def _legacy_get_gemini_response(prompt: str) -> str:', 1)
+              # Insert compatibility wrapper before load_config or first major section.
+              anchor = '\ndef load_config() -> dict:'
+              wrapper = '\ndef get_gemini_response(prompt: str) -> str:\n    return _shared_llm_response(prompt)\n\n'
+              if wrapper.strip() not in text:
+                  text = text.replace(anchor, wrapper + anchor, 1)
               path.write_text(text, encoding='utf-8')
-              print(f'patched: {path}')
+              print(f'fallback enabled: {path}')
           PY
 
-      - name: Validate patched model IDs
+      - name: Validate LLM fallback wiring
         run: |
-          grep -R "gemini-2.5-flash" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
-          if grep -R "gemini-2.0-flash" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py; then
-            echo "Deprecated Gemini model ID remains"
-            exit 1
-          fi
+          grep -R "llm_fallback" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
+          python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
 
       - name: Generate and publish blog post
         run: |
