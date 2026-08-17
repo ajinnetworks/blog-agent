@@ -11,6 +11,7 @@ from agents.llm_fallback import (
     _short_safe_title,
 )
 from agents.writer_agent import _normalize_title
+from agents.runtime_guard import clean_title_boundary, disable_provider, provider_disabled
 from agents import reviewer_agent
 
 
@@ -68,6 +69,18 @@ def test_reviewer_revision_persistence() -> None:
     assert result[0]["review_result"]["total_score"] == 90, result[0]
 
 
+def test_runtime_guards() -> None:
+    broken = "로봇 엔드이펙터 설계 시 Payload·Moment·Fa | 아진네트웍스"
+    cleaned = clean_title_boundary(broken, 40)
+    assert len(cleaned) <= 40, cleaned
+    assert not cleaned.endswith("Fa"), cleaned
+
+    disable_provider("gemini")
+    disable_provider("claude")
+    assert provider_disabled("gemini") is True
+    assert provider_disabled("claude") is True
+
+
 def main() -> None:
     for topic in ["정년", "최애의 사원", "퇴직", "연예인 콘서트", "주식 전망", "여행 맛집"]:
         assert_rejected(topic)
@@ -122,12 +135,14 @@ def main() -> None:
     assert len(_normalize_title("")) <= 40
 
     test_reviewer_revision_persistence()
+    test_runtime_guards()
 
     print("SAFE-MODE REGRESSION TESTS: PASS")
     print("Blocked topics stay blocked even when LLM mixes them with industrial terms")
     print("All selected/fallback topics pass industrial gate")
     print("Writer titles are guaranteed <= 40 characters")
     print("Reviewer revised post and pass status persist into final output")
+    print("Provider hard-failure circuits and title boundary cleanup are covered")
 
 
 if __name__ == "__main__":
