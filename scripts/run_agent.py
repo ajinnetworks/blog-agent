@@ -30,6 +30,9 @@ from agents.content_quality import apply_final_content_gate
 from agents.image_selector import assign_batch_images
 from agents.publisher_agent import run_publisher_agent
 from agents.github_publisher import run_github_publisher, init_github_repo, get_github_config
+from agents.publisher_image_bridge import install as install_image_publisher
+
+install_image_publisher()
 
 load_dotenv(ROOT / ".env", override=True)
 
