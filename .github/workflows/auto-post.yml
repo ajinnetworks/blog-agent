@@ -61,7 +61,11 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          files = [Path('agents/trend_agent.py'), Path('agents/writer_agent.py')]
+          files = [
+              Path('agents/trend_agent.py'),
+              Path('agents/writer_agent.py'),
+              Path('agents/reviewer_agent.py'),
+          ]
           replacements = {
               'gemini-2.0-flash-lite': 'gemini-2.5-flash-lite',
               'gemini-2.0-flash': 'gemini-2.5-flash',
@@ -76,8 +80,8 @@ jobs:
 
       - name: Validate patched model IDs
         run: |
-          grep -R "gemini-2.5-flash" agents/trend_agent.py agents/writer_agent.py
-          if grep -R "gemini-2.0-flash" agents/trend_agent.py agents/writer_agent.py; then
+          grep -R "gemini-2.5-flash" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
+          if grep -R "gemini-2.0-flash" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py; then
             echo "Deprecated Gemini model ID remains"
             exit 1
           fi
