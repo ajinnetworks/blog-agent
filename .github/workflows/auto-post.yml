@@ -1,23 +1,21 @@
-﻿name: Auto Blog Post (二?3???먮룞 諛쒗뻾)
+name: Auto Blog Post
 
 on:
-  # 留ㅼ＜ ?붋룸ぉ쨌???쒓뎅?쒓컙 09:00 (UTC 00:00)
   schedule:
-    - cron: '0 0 * * 2'   # ?붿슂??
-    - cron: '0 0 * * 4'   # 紐⑹슂??
-    - cron: '0 0 * * 6'   # ?좎슂??
+    - cron: '0 0 * * 2'   # Tuesday 09:00 KST
+    - cron: '0 0 * * 4'   # Thursday 09:00 KST
+    - cron: '0 0 * * 6'   # Saturday 09:00 KST
 
-  # ?섎룞 ?ㅽ뻾 ?덉슜
   workflow_dispatch:
     inputs:
       mode:
-        description: '?ㅽ뻾 紐⑤뱶'
+        description: 'Execution mode'
         required: true
         default: 'once'
         type: choice
         options:
-          - once        # ?ㅼ젣 諛쒗뻾
-          - dry-run     # 珥덉븞留??앹꽦
+          - once
+          - dry-run
 
 jobs:
   auto-post:
@@ -33,20 +31,20 @@ jobs:
       LOG_LEVEL: "INFO"
 
     steps:
-      - name: 肄붾뱶 泥댄겕?꾩썐
+      - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      - name: Python 3.11 ?ㅼ젙
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: ?섏〈???ㅼ튂
+      - name: Install dependencies
         run: |
           pip install anthropic PyGithub python-frontmatter requests PyYAML python-dotenv schedule google-genai
 
-      - name: .env ?뚯씪 ?앹꽦
+      - name: Create .env file
         run: |
           cat > .env << EOF
           ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
@@ -59,18 +57,41 @@ jobs:
           PYTHONIOENCODING=utf-8
           EOF
 
-      - name: 釉붾줈洹??ъ뒪???먮룞 ?앹꽦 諛?諛쒗뻾
+      - name: Patch deprecated Gemini model IDs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files = [Path('agents/trend_agent.py'), Path('agents/writer_agent.py')]
+          replacements = {
+              'gemini-2.0-flash-lite': 'gemini-2.5-flash-lite',
+              'gemini-2.0-flash': 'gemini-2.5-flash',
+          }
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8')
+              print(f'patched: {path}')
+          PY
+
+      - name: Validate patched model IDs
+        run: |
+          grep -R "gemini-2.5-flash" agents/trend_agent.py agents/writer_agent.py
+          if grep -R "gemini-2.0-flash" agents/trend_agent.py agents/writer_agent.py; then
+            echo "Deprecated Gemini model ID remains"
+            exit 1
+          fi
+
+      - name: Generate and publish blog post
         run: |
           MODE="${{ github.event.inputs.mode || 'once' }}"
-          echo "?ㅽ뻾 紐⑤뱶: $MODE"
-          python scripts/run_agent.py --mode $MODE --platform github
+          echo "Execution mode: $MODE"
+          python scripts/run_agent.py --mode "$MODE" --platform github
 
-      - name: ?ㅽ뻾 濡쒓렇 ?낅줈??
+      - name: Upload execution logs
         if: always()
         uses: actions/upload-artifact@v4.6.2
         with:
           name: blog-logs-${{ github.run_number }}
           path: output/logs/
           retention-days: 30
-
-
