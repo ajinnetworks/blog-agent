@@ -1,8 +1,8 @@
-"""Regression test for final content quality and image strategy."""
+"""Regression test for final content quality and Image Selector V2."""
 
 from agents.content_enricher import enrich_posts
 from agents.content_quality import apply_final_content_gate
-from agents.image_selector import assign_batch_images
+from agents.image_selector import assign_batch_images, select_image
 
 
 def main() -> None:
@@ -37,18 +37,33 @@ def main() -> None:
     posts = assign_batch_images(posts)
     images = [p.get("image") for p in posts]
     assert len(set(images)) == len(images), f"Batch hero image duplicated: {images}"
+    assert images[0].endswith("logistics-amr.svg"), images
+    assert images[1].endswith("vision-inspection.svg"), images
+    assert images[2].endswith("plc-control.svg"), images
+    assert all(p.get("image_relevance_score", 0) >= 40 for p in posts), posts
     assert all(p.get("image_alt") for p in posts), posts
     assert all(p.get("image") in p.get("content", "") for p in posts), posts
+
+    # Critical regression: three logistics articles must map to three logistics-specific assets,
+    # not unrelated control/smart/vision images merely to avoid duplication.
+    logistics_cases = [
+        {"title": "AGV AMR 동선 설계", "category": "물류자동화", "source_topic": {"keyword": "AGV AMR 충전 교통제어"}},
+        {"title": "자동창고 WMS 입출고", "category": "물류자동화", "source_topic": {"keyword": "자동창고 AS/RS WMS 입출고"}},
+        {"title": "로봇 팔레타이징", "category": "물류자동화", "source_topic": {"keyword": "컨베이어 로봇 팔레타이징 팔레트 적재"}},
+    ]
+    mapped = [select_image(p, {})[0] for p in logistics_cases]
+    assert mapped[0].endswith("logistics-amr.svg"), mapped
+    assert mapped[1].endswith("logistics-asrs.svg"), mapped
+    assert mapped[2].endswith("palletizing.svg"), mapped
 
     posts = apply_final_content_gate(posts)
     failures = [(p.get("title"), p.get("final_quality", {}).get("issues")) for p in posts if not p.get("final_quality", {}).get("pass")]
     assert not failures, failures
 
     print("FINAL CONTENT QUALITY TESTS: PASS")
-    print("All enriched posts >= 1500 chars")
-    print("All posts satisfy technical/reviewer/meta/SEO gates")
-    print("Hero images are topic-aware and non-duplicated within batch")
-    print("Alt text and inline hero image are attached")
+    print("Image Selector V2 semantic relevance tests: PASS")
+    print("AGV/AMR -> logistics-amr, WMS/ASRS -> logistics-asrs, palletizing -> palletizing")
+    print("All enriched posts >= 1500 chars and final gate passes")
 
 
 if __name__ == "__main__":
