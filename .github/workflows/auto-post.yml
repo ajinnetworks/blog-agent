@@ -2,9 +2,9 @@ name: Auto Blog Post
 
 on:
   schedule:
-    - cron: '0 0 * * 2'   # Tuesday 09:00 KST
-    - cron: '0 0 * * 4'   # Thursday 09:00 KST
-    - cron: '0 0 * * 6'   # Saturday 09:00 KST
+    - cron: '0 0 * * 2'
+    - cron: '0 0 * * 4'
+    - cron: '0 0 * * 6'
 
   workflow_dispatch:
     inputs:
@@ -69,10 +69,7 @@ jobs:
           for path in files:
               text = path.read_text(encoding='utf-8')
               marker = 'logger = logging.getLogger(__name__)'
-              injection = (
-                  marker
-                  + '\n\nfrom agents.llm_fallback import get_llm_response as _shared_llm_response\n'
-              )
+              injection = marker + '\n\nfrom agents.llm_fallback import get_llm_response as _shared_llm_response\n'
               if 'from agents.llm_fallback import get_llm_response as _shared_llm_response' not in text:
                   text = text.replace(marker, injection, 1)
               text = text.replace('def get_gemini_response(prompt: str) -> str:', 'def _legacy_get_gemini_response(prompt: str) -> str:', 1)
@@ -87,11 +84,15 @@ jobs:
       - name: Validate LLM fallback wiring
         run: |
           grep -R "llm_fallback" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
-          python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
+          python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py
 
       - name: Enforce Ajin industrial safe-mode
         run: |
           python -m scripts.test_safe_mode
+
+      - name: Enforce final content and image quality
+        run: |
+          python -m scripts.test_quality_pipeline
 
       - name: Generate and publish blog post
         run: |
