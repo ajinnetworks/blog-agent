@@ -84,7 +84,7 @@ jobs:
       - name: Validate LLM fallback wiring
         run: |
           grep -R "llm_fallback" agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py
-          python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py
+          python -m py_compile agents/llm_fallback.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py
 
       - name: Enforce Ajin industrial safe-mode
         run: |
@@ -93,6 +93,10 @@ jobs:
       - name: Enforce final content and image quality
         run: |
           python -m scripts.test_quality_pipeline
+
+      - name: Enforce Phase 2 image front matter
+        run: |
+          python -m scripts.test_phase2_images
 
       - name: Generate and publish blog post
         run: |
