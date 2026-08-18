@@ -19,5 +19,7 @@ jobs:
         run: python -m scripts.test_tag_policy
       - name: Runtime title and image quality regression
         run: python -m scripts.test_runtime_quality_regression
+      - name: Safe Mode Content Engine V2 regression
+        run: python -m scripts.test_safe_content_engine_v2
       - name: Compile policy modules
-        run: python -m py_compile agents/recent_topic_guard.py agents/tag_policy.py agents/runtime_guard.py agents/image_selector.py scripts/test_runtime_quality_regression.py
+        run: python -m py_compile agents/recent_topic_guard.py agents/tag_policy.py agents/runtime_guard.py agents/image_selector.py agents/safe_content_engine_v2.py agents/content_enricher.py scripts/test_runtime_quality_regression.py scripts/test_safe_content_engine_v2.py
