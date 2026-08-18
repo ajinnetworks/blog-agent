@@ -70,11 +70,18 @@ jobs:
               marker = 'logger = logging.getLogger(__name__)'
               injection = marker + '\n\nfrom agents.llm_fallback import get_llm_response as _shared_llm_response\n'
               if 'from agents.llm_fallback import get_llm_response as _shared_llm_response' not in text:
+                  if marker not in text:
+                      raise SystemExit(f'{path}: logger anchor not found')
                   text = text.replace(marker, injection, 1)
-              text = text.replace('def get_gemini_response(prompt: str) -> str:', 'def _legacy_get_gemini_response(prompt: str) -> str:', 1)
+              if 'def _legacy_get_gemini_response(prompt: str) -> str:' not in text:
+                  if 'def get_gemini_response(prompt: str) -> str:' not in text:
+                      raise SystemExit(f'{path}: get_gemini_response not found')
+                  text = text.replace('def get_gemini_response(prompt: str) -> str:', 'def _legacy_get_gemini_response(prompt: str) -> str:', 1)
               anchor = '\ndef load_config() -> dict:'
               wrapper = '\ndef get_gemini_response(prompt: str) -> str:\n    return _shared_llm_response(prompt)\n\n'
               if wrapper.strip() not in text:
+                  if anchor not in text:
+                      raise SystemExit(f'{path}: load_config anchor not found')
                   text = text.replace(anchor, wrapper + anchor, 1)
               path.write_text(text, encoding='utf-8')
           PY
@@ -88,6 +95,8 @@ jobs:
           marker = 'logger = logging.getLogger(__name__)'
           injection = marker + '\n\nfrom agents.runtime_guard import all_llm_providers_disabled, make_safe_mode_seo_title\n'
           if 'from agents.runtime_guard import all_llm_providers_disabled, make_safe_mode_seo_title' not in text:
+              if marker not in text:
+                  raise SystemExit('writer logger anchor not found')
               text = text.replace(marker, injection, 1)
           old_wait = '''        if i > 1:\n            logger.info("[RPM 보호] 5초 대기 중...")\n            time.sleep(5)'''
           new_wait = '''        if i > 1:\n            if all_llm_providers_disabled():\n                logger.info("[RPM 보호] 외부 LLM circuit open -> 대기 생략")\n            else:\n                logger.info("[RPM 보호] 5초 대기 중...")\n                time.sleep(5)'''
@@ -95,42 +104,38 @@ jobs:
               text = text.replace(old_wait, new_wait, 1)
           old_title = '''    post["title"] = _normalize_title(post.get("title", ""), fallback=topic.get("keyword", "산업자동화 기술 가이드"))'''
           new_title = '''    post["title"] = _normalize_title(post.get("title", ""), fallback=topic.get("keyword", "산업자동화 기술 가이드"))\n    if all_llm_providers_disabled():\n        post["title"] = make_safe_mode_seo_title(topic.get("keyword", post["title"]))'''
-          if old_title in text:
+          if new_title not in text:
+              if old_title not in text:
+                  raise SystemExit('writer title normalization anchor not found')
               text = text.replace(old_title, new_title, 1)
           path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Enable Phase 3 topic guard and Phase 3.1 tags
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/run_agent.py')
-          text = path.read_text(encoding='utf-8')
-          anchor = 'from agents.publisher_image_bridge import install as install_image_publisher'
-          imports = anchor + '\nfrom agents.recent_topic_guard import guard_and_refill_topics\nfrom agents.tag_policy import normalize_posts_tags'
-          if 'from agents.recent_topic_guard import guard_and_refill_topics' not in text:
-              text = text.replace(anchor, imports, 1)
-          elif 'from agents.tag_policy import normalize_posts_tags' not in text:
-              text = text.replace('from agents.recent_topic_guard import guard_and_refill_topics', 'from agents.recent_topic_guard import guard_and_refill_topics\nfrom agents.tag_policy import normalize_posts_tags', 1)
-          old = '''    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
-          new = '''    if not topic_override:\n        guard_days = int(os.environ.get("RECENT_TOPIC_DAYS", "60"))\n        guard_threshold = float(os.environ.get("RECENT_TOPIC_THRESHOLD", "0.62"))\n        topics, duplicate_topics = guard_and_refill_topics(topics, days=guard_days, threshold=guard_threshold, target_count=3)\n        result_summary["stages"]["recent_topic_guard"] = {\n            "days": guard_days, "threshold": guard_threshold,\n            "accepted": len(topics), "rejected": len(duplicate_topics),\n            "duplicates": duplicate_topics,\n        }\n        logger.info("[TOPIC-GUARD] final=%s rejected=%s", len(topics), len(duplicate_topics))\n    result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}\n    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")'''
-          if old not in text:
-              raise SystemExit('run_agent trend block not found; refusing unsafe Phase 3 patch')
-          text = text.replace(old, new, 1)
-          old_enrich = '    posts = enrich_posts(posts)'
-          new_enrich = '    posts = enrich_posts(posts)\n    posts = normalize_posts_tags(posts)'
-          if new_enrich not in text:
-              if old_enrich not in text:
-                  raise SystemExit('run_agent enrich block not found; refusing Phase 3.1 tag patch')
-              text = text.replace(old_enrich, new_enrich, 1)
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Validate runtime wiring
+      - name: Validate integrated runtime wiring
         run: |
           grep -R "guard_and_refill_topics" scripts/run_agent.py
           grep -R "normalize_posts_tags" scripts/run_agent.py
+          grep -R "Final Content Gate 합격 포스트가 0개" scripts/run_agent.py
           python -m py_compile agents/llm_fallback.py agents/runtime_guard.py agents/tag_policy.py agents/trend_agent.py agents/writer_agent.py agents/reviewer_agent.py agents/content_enricher.py agents/content_quality.py agents/image_selector.py agents/publisher_image_bridge.py agents/recent_topic_guard.py scripts/run_agent.py
+
+      - name: Verify publishing credentials and target repository
+        run: |
+          python - <<'PY'
+          import os
+          from github import Auth, Github
+          token = os.environ.get('BLOG_GITHUB_TOKEN')
+          repo_name = os.environ.get('BLOG_REPO')
+          if not token:
+              raise SystemExit('BLOG_GITHUB_TOKEN is missing')
+          if not repo_name:
+              raise SystemExit('BLOG_REPO is missing')
+          repo = Github(auth=Auth.Token(token)).get_repo(repo_name)
+          perms = getattr(repo, 'permissions', None)
+          can_push = bool(getattr(perms, 'push', False)) if perms else False
+          print(f'[PREFLIGHT] repo={repo.full_name} default_branch={repo.default_branch} push={can_push}')
+          if not can_push:
+              raise SystemExit('BLOG_GITHUB_TOKEN does not have push permission to target repository')
+          PY
 
       - name: Enforce Ajin industrial safe-mode
         run: python -m scripts.test_safe_mode
