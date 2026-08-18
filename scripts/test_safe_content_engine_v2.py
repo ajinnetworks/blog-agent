@@ -1,6 +1,6 @@
 """Regression tests for Safe Mode Content Engine V2."""
 
-from agents.content_enricher import enrich_post
+from agents.content_enricher import SEO_KEYWORD_LIMIT, enrich_post
 from agents.recent_topic_guard import PHASE3_TOPIC_POOL, refill_topics
 from agents.safe_content_engine_v2 import CATEGORY_ORDER, DOMAIN_PROFILES, build_topic_pool
 
@@ -12,6 +12,7 @@ def main() -> None:
     assert sum(len(v) for v in pools.values()) >= 180
     assert PHASE3_TOPIC_POOL == pools
     assert all(c in DOMAIN_PROFILES for c in CATEGORY_ORDER)
+    assert SEO_KEYWORD_LIMIT == 8
 
     # With no history, deterministic round-robin refill must still spread categories.
     topics = refill_topics([], [], target_count=3, threshold=0.62)
@@ -37,6 +38,7 @@ def main() -> None:
         assert post["generation_provider"] == "safe-mode-content-engine-v2"
         assert post["content_template"] == category
         assert post["word_count"] >= 1700, (category, post["word_count"])
+        assert 3 <= len(post["seo_keywords"]) <= SEO_KEYWORD_LIMIT, (category, post["seo_keywords"])
         assert control_marker in body, (category, control_marker)
         assert rfq_marker in body, (category, rfq_marker)
         bodies.append(body)
@@ -47,6 +49,7 @@ def main() -> None:
     print("SAFE MODE CONTENT ENGINE V2 TESTS: PASS")
     print("Categories: 9 | minimum topics/category: 20 | total topics >= 180")
     print("Category-specific mechanism/control/validation/RFQ templates: PASS")
+    print("SEO keyword count aligned with final gate: 3-8")
 
 
 if __name__ == "__main__":
