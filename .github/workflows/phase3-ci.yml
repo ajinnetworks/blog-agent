@@ -17,5 +17,7 @@ jobs:
         run: python -m scripts.test_recent_topic_guard
       - name: Phase 3.1 tag policy tests
         run: python -m scripts.test_tag_policy
+      - name: Runtime title and image quality regression
+        run: python -m scripts.test_runtime_quality_regression
       - name: Compile policy modules
-        run: python -m py_compile agents/recent_topic_guard.py agents/tag_policy.py
+        run: python -m py_compile agents/recent_topic_guard.py agents/tag_policy.py agents/runtime_guard.py agents/image_selector.py scripts/test_runtime_quality_regression.py
