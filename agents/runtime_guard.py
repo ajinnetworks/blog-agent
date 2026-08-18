@@ -10,6 +10,7 @@ import re
 
 _PROVIDER_DISABLED = {"gemini": False, "claude": False}
 SEO_PATTERNS = ("완전 정복", "도입 전", "해결한", "달성한")
+TRAILING_CONNECTORS = ("과", "와", "및", "시")
 
 
 def disable_provider(name: str) -> None:
@@ -32,6 +33,15 @@ def classify_hard_provider_failure(exc: Exception) -> str | None:
     if any(x in text for x in ["credit balance is too low", "purchase credits", "billing"]):
         return "claude"
     return None
+
+
+def _drop_trailing_connector(text: str) -> str:
+    text = str(text or "").rstrip(" ·-/—,:;")
+    for token in TRAILING_CONNECTORS:
+        if text.endswith(token):
+            text = text[:-len(token)].rstrip(" ·-/—,:;")
+            break
+    return text
 
 
 def clean_title_boundary(title: str, limit: int = 40) -> str:
@@ -59,6 +69,7 @@ def clean_title_boundary(title: str, limit: int = 40) -> str:
     if m and m.start() > 0:
         cut = cut[:m.start()].rstrip(" ·-/—,:;")
 
+    cut = _drop_trailing_connector(cut)
     if has_brand_suffix:
         return (cut + suffix)[:limit]
     return cut[:limit]
@@ -73,9 +84,9 @@ def make_safe_mode_seo_title(keyword: str, limit: int = 40) -> str:
         candidate = raw + suffix
         return clean_title_boundary(candidate, limit)
 
-    # Prefer a factual, non-clickbait pattern that matches technical search intent.
     base_limit = max(8, limit - len(" 도입 전") - len(suffix))
     base = clean_title_boundary(raw, base_limit)
+    base = _drop_trailing_connector(base)
     candidate = f"{base} 도입 전{suffix}"
     return clean_title_boundary(candidate, limit)
 
