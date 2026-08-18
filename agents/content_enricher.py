@@ -10,6 +10,7 @@ import re
 from agents.safe_content_engine_v2 import domain_profile
 
 TARGET_MIN_CHARS = 1700
+SEO_KEYWORD_LIMIT = 8
 
 
 def _compact_len(text: str) -> int:
@@ -84,7 +85,7 @@ def enrich_post(post: dict) -> dict:
     post["content_template"] = category
     post["seo_keywords"] = list(dict.fromkeys([
         keyword, category, *profile["keywords"], "산업자동화", "아진네트웍스"
-    ]))[:10]
+    ]))[:SEO_KEYWORD_LIMIT]
     meta = f"{keyword}의 기구·제어·Cycle Time·안전·PoC·RFQ 검토 기준을 {category} 엔지니어링 관점에서 정리합니다."
     post["meta_description"] = meta[:160]
     post["word_count"] = _compact_len(post["content"])
