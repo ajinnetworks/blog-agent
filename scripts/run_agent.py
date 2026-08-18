@@ -31,6 +31,8 @@ from agents.image_selector import assign_batch_images
 from agents.publisher_agent import run_publisher_agent
 from agents.github_publisher import run_github_publisher, init_github_repo, get_github_config
 from agents.publisher_image_bridge import install as install_image_publisher
+from agents.recent_topic_guard import guard_and_refill_topics
+from agents.tag_policy import normalize_posts_tags
 
 install_image_publisher()
 
@@ -52,7 +54,12 @@ logger = logging.getLogger("run_agent")
 
 
 def validate_env(platform: str = "github") -> bool:
-    required = ["ANTHROPIC_API_KEY"]
+    """Validate only hard requirements.
+
+    LLM keys are optional because agents.llm_fallback has a deterministic
+    Ajin industrial safe-mode when Gemini/Claude are unavailable.
+    """
+    required = []
     if platform == "github":
         required += ["BLOG_GITHUB_TOKEN", "BLOG_REPO"]
     elif platform == "wordpress":
@@ -60,9 +67,12 @@ def validate_env(platform: str = "github") -> bool:
 
     missing = [k for k in required if not os.environ.get(k)]
     if missing:
-        logger.error(f"필수 환경변수 미설정: {missing}")
+        logger.error("필수 환경변수 미설정: %s", missing)
         logger.error("config/.env.sample 참고 후 .env에 입력하세요.")
         return False
+
+    if not os.environ.get("GEMINI_API_KEY") and not os.environ.get("ANTHROPIC_API_KEY"):
+        logger.warning("외부 LLM 키 없음 -> 아진네트웍스 deterministic safe-mode로 실행")
     return True
 
 
@@ -71,8 +81,8 @@ def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platfor
     platform_label = {"github": "GitHub Pages", "wordpress": "WordPress"}.get(platform, platform)
 
     logger.info("=" * 60)
-    logger.info(f"Blog Agent 시작: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info(f"플랫폼: {platform_label} | 모드: {'DRY-RUN' if dry_run else '실제 발행'}")
+    logger.info("Blog Agent 시작: %s", start_time.strftime('%Y-%m-%d %H:%M:%S'))
+    logger.info("플랫폼: %s | 모드: %s", platform_label, 'DRY-RUN' if dry_run else '실제 발행')
     logger.info("=" * 60)
 
     result_summary = {"run_at": start_time.isoformat(), "platform": platform, "dry_run": dry_run, "stages": {}}
@@ -82,18 +92,42 @@ def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platfor
         topics = [{"keyword": topic_override, "angle": f"{topic_override} 실용 분석", "reason": "수동 지정", "estimated_search_volume": "unknown"}]
     else:
         topics = run_trend_agent()
+        guard_days = int(os.environ.get("RECENT_TOPIC_DAYS", "60"))
+        guard_threshold = float(os.environ.get("RECENT_TOPIC_THRESHOLD", "0.62"))
+        topics, duplicate_topics = guard_and_refill_topics(
+            topics,
+            days=guard_days,
+            threshold=guard_threshold,
+            target_count=3,
+        )
+        result_summary["stages"]["recent_topic_guard"] = {
+            "days": guard_days,
+            "threshold": guard_threshold,
+            "accepted": len(topics),
+            "rejected": len(duplicate_topics),
+            "duplicates": duplicate_topics,
+        }
+        logger.info("[TOPIC-GUARD] final=%s rejected=%s", len(topics), len(duplicate_topics))
+
+    if not topics:
+        raise RuntimeError("주제 선정 결과가 0개입니다. Trend/Safe-mode 로그를 확인하세요.")
+
     result_summary["stages"]["trend"] = {"count": len(topics), "topics": [t["keyword"] for t in topics]}
-    logger.info(f"선정 주제: {[t['keyword'] for t in topics]}")
+    logger.info("선정 주제: %s", [t['keyword'] for t in topics])
 
     logger.info("\n[STAGE 2] 포스트 작성")
     posts = run_writer_agent(topics)
     posts = enrich_posts(posts)
+    posts = normalize_posts_tags(posts)
     result_summary["stages"]["writer"] = {
         "attempted": len(topics),
         "succeeded": sum(1 for p in posts if not p.get("error")),
         "enriched": sum(1 for p in posts if p.get("content_enriched")),
     }
-    logger.info(f"기술본문 보강: {result_summary['stages']['writer']['enriched']}개")
+    logger.info("기술본문 보강: %s개", result_summary['stages']['writer']['enriched'])
+
+    if not posts:
+        raise RuntimeError("Writer 결과가 0개입니다. LLM/Safe-mode 로그를 확인하세요.")
 
     logger.info("\n[STAGE 3] 품질 검수")
     reviewed_posts = run_reviewer_agent(posts)
@@ -125,7 +159,10 @@ def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platfor
         "issues": {p.get("title", "N/A"): p.get("final_quality", {}).get("issues", []) for p in reviewed_posts if not p.get("final_quality", {}).get("pass")},
     }
 
-    logger.info(f"\n[STAGE 5] 발행 → {platform_label}" + (" [DRY-RUN]" if dry_run else ""))
+    if not final_ready:
+        raise RuntimeError("Final Content Gate 합격 포스트가 0개입니다. 품질 이슈를 수정한 뒤 재실행하세요.")
+
+    logger.info("\n[STAGE 5] 발행 → %s%s", platform_label, " [DRY-RUN]" if dry_run else "")
     if platform == "github":
         publish_results = run_github_publisher(final_ready, dry_run=dry_run)
         result_summary["stages"]["publisher"] = {
@@ -142,8 +179,15 @@ def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platfor
             "platform": platform,
             "dry_run": dry_run,
             "published": len([r for r in publish_results if not r.get("error")]),
+            "failed": len([r for r in publish_results if r.get("error")]),
             "urls": [r.get("url") for r in publish_results if r.get("url")],
         }
+
+    pub = result_summary["stages"].get("publisher", {})
+    if not dry_run and pub.get("published", 0) == 0:
+        raise RuntimeError("발행 성공 0개입니다. GitHub token/repo 권한 및 Publisher 로그를 확인하세요.")
+    if pub.get("failed", 0):
+        logger.error("부분 발행 실패: %s개. 성공한 포스트 재발행 방지를 위해 자동 재시도하지 않습니다.", pub["failed"])
 
     elapsed = (datetime.now() - start_time).total_seconds()
     result_summary["elapsed_seconds"] = round(elapsed, 1)
@@ -151,17 +195,16 @@ def run_full_pipeline(dry_run: bool = False, topic_override: str = None, platfor
     summary_path.write_text(json.dumps(result_summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
     logger.info("\n" + "=" * 60)
-    logger.info(f"  플랫폼: {platform_label}")
-    logger.info(f"  주제: {result_summary['stages']['trend']['count']}개")
-    logger.info(f"  작성: {result_summary['stages']['writer']['succeeded']}개")
-    logger.info(f"  Reviewer 합격: {result_summary['stages']['reviewer']['passed']}개")
-    logger.info(f"  Final Gate 합격: {result_summary['stages']['final_quality']['passed']}개")
-    pub = result_summary["stages"].get("publisher", {})
+    logger.info("  플랫폼: %s", platform_label)
+    logger.info("  주제: %s개", result_summary['stages']['trend']['count'])
+    logger.info("  작성: %s개", result_summary['stages']['writer']['succeeded'])
+    logger.info("  Reviewer 합격: %s개", result_summary['stages']['reviewer']['passed'])
+    logger.info("  Final Gate 합격: %s개", result_summary['stages']['final_quality']['passed'])
     label = "[DRY-RUN] 커밋 차단" if dry_run else "발행"
-    logger.info(f"  {label}: {pub.get('published', 0)}개")
+    logger.info("  %s: %s개", label, pub.get('published', 0))
     if pub.get("blog_url"):
-        logger.info(f"  URL : {pub['blog_url']}")
-    logger.info(f"  시간: {elapsed:.1f}초")
+        logger.info("  URL : %s", pub['blog_url'])
+    logger.info("  시간: %.1f초", elapsed)
     logger.info("=" * 60)
     return result_summary
 
@@ -180,7 +223,7 @@ def main():
         load_dotenv(ROOT / ".env", override=True)
         try:
             cfg = get_github_config()
-            logger.info(f"GitHub 레포 초기화: {cfg['repo_name']}")
+            logger.info("GitHub 레포 초기화: %s", cfg['repo_name'])
             success = init_github_repo(cfg, dry_run=False)
             if success:
                 username = cfg["repo_name"].split("/")[0]
